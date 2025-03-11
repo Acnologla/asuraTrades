@@ -14,7 +14,7 @@ const (
 )
 
 type Item struct {
-	ID       uint64
+	ID       ID
 	UserID   uint64
 	Quantity int
 	ItemID   int

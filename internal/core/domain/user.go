@@ -1,6 +1,8 @@
 package domain
 
+type ID = uint64
+
 type User struct {
-	ID uint64
+	ID ID
 	Xp int
 }
