@@ -2,13 +2,16 @@ package controllers
 
 import (
 	"net/http"
+	"strconv"
 
+	"github.com/acnologla/asuraTrades/internal/adapters/http/dto"
+	"github.com/acnologla/asuraTrades/internal/core/domain"
 	"github.com/acnologla/asuraTrades/internal/core/service"
 	"github.com/gin-gonic/gin"
 )
 
 type GenerateTokenRequest struct {
-	ID uint64 `json:"id"`
+	ID string `json:"id"`
 }
 
 type UserTokenController struct {
@@ -28,11 +31,11 @@ func (u *UserTokenController) GetUserProfile(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, userProfile)
+	c.JSON(http.StatusOK, dto.NewUserProfileDTO(userProfile))
 }
 
 func (u *UserTokenController) GenerateToken(c *gin.Context) {
-	password := c.Request.Header.Get("password")
+	password := c.Request.Header.Get("Password")
 	if password != u.generateTokenPassword {
 		c.String(http.StatusNotFound, "Unautorized")
 		return
@@ -40,11 +43,17 @@ func (u *UserTokenController) GenerateToken(c *gin.Context) {
 
 	requestData := &GenerateTokenRequest{}
 	if err := c.ShouldBindJSON(requestData); err != nil {
+		c.String(http.StatusBadRequest, "ID not found")
+		return
+	}
+
+	id, err := strconv.ParseUint(requestData.ID, 10, 64)
+	if err != nil {
 		c.String(http.StatusBadRequest, "Invalid ID format")
 		return
 	}
 
-	token, err := u.userTokenService.CreateToken(c, requestData.ID)
+	token, err := u.userTokenService.CreateToken(c, domain.ID(id))
 	if err != nil {
 		c.String(http.StatusBadRequest, err.Error())
 		return

@@ -5,7 +5,6 @@ import (
 
 	"github.com/acnologla/asuraTrades/internal/core/domain"
 	"github.com/acnologla/asuraTrades/internal/core/port"
-	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -36,9 +35,14 @@ func (r *RoosterRepository) GetUserRoosters(ctx context.Context, userID domain.I
 	}
 	defer rows.Close()
 
-	roosters, err := pgx.CollectRows(rows, pgx.RowToStructByName[*domain.Rooster])
-	if err != nil {
-		return nil, err
+	roosters := make([]*domain.Rooster, 0)
+
+	for rows.Next() {
+		rooster := &domain.Rooster{}
+		if err := rows.Scan(&rooster.ID, &rooster.UserID, &rooster.Type); err != nil {
+			return nil, err
+		}
+		roosters = append(roosters, rooster)
 	}
 
 	return roosters, nil

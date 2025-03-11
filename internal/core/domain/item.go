@@ -1,5 +1,7 @@
 package domain
 
+import "github.com/google/uuid"
+
 type ItemType int
 
 const (
@@ -14,8 +16,8 @@ const (
 )
 
 type Item struct {
-	ID       ID
-	UserID   uint64
+	ID       uuid.UUID
+	UserID   ID
 	Quantity int
 	ItemID   int
 	Type     ItemType

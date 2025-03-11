@@ -1,8 +1,10 @@
 package domain
 
+import "github.com/google/uuid"
+
 type Rooster struct {
-	ID     ID
-	UserID uint64
+	ID     uuid.UUID
+	UserID ID
 	Origin string
 	Type   int
 }
