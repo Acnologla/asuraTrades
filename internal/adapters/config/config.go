@@ -9,6 +9,10 @@ type (
 		Secret string
 	}
 
+	HTTPConfig struct {
+		Port string
+	}
+
 	Config struct {
 		Postgres PostgresConfig
 		JWT      JWTConfig

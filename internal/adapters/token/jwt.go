@@ -47,6 +47,6 @@ func (j *JwtTokenService) ValidateToken(tokenStr string) (domain.ID, error) {
 	return 0, errors.New("token without id")
 }
 
-func NewJwtTokenService(config config.JWTConfig) port.TokenService {
+func NewJwtTokenService(config config.JWTConfig) port.TokenProvider {
 	return &JwtTokenService{secret: []byte(config.Secret)}
 }
