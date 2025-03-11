@@ -1,10 +1,10 @@
-package dto
+package response
 
 import (
 	"github.com/acnologla/asuraTrades/internal/core/domain"
 )
 
-type ItemUserDto struct {
+type ItemUserResponse struct {
 	ID       string `json:"id"`
 	UserID   string `json:"user_id"`
 	Quantity int    `json:"quantity"`
@@ -12,33 +12,34 @@ type ItemUserDto struct {
 	Type     int    `json:"type"`
 }
 
-type UserRoosterDto struct {
+type UserRoosterResponse struct {
 	ID     string `json:"id"`
 	UserID string `json:"user_id"`
 	Origin string `json:"origin"`
 	Type   int    `json:"type"`
 }
 
-type UserProfileDTO struct {
-	ID       string            `json:"id"`
-	Xp       int               `json:"xp"`
-	Roosters []*UserRoosterDto `json:"roosters"`
-	Items    []*ItemUserDto    `json:"items"`
+type UserTokenResponse struct {
+	ID       string                 `json:"id"`
+	OtherID  string                 `json:"other_id"`
+	Xp       int                    `json:"xp"`
+	Roosters []*UserRoosterResponse `json:"roosters"`
+	Items    []*ItemUserResponse    `json:"items"`
 }
 
-func NewUserProfileDTO(userProfile *domain.UserProfile) *UserProfileDTO {
-	roosters := make([]*UserRoosterDto, len(userProfile.Roosters))
+func NewUserTokenResponse(userTrade *domain.UserTrade, userProfile *domain.UserProfile) *UserTokenResponse {
+	roosters := make([]*UserRoosterResponse, len(userProfile.Roosters))
 	for i, rooster := range userProfile.Roosters {
-		roosters[i] = &UserRoosterDto{
+		roosters[i] = &UserRoosterResponse{
 			ID:     rooster.ID.String(),
 			UserID: userProfile.ID.String(),
 			Origin: rooster.Origin,
 			Type:   rooster.Type,
 		}
 	}
-	items := make([]*ItemUserDto, len(userProfile.Items))
+	items := make([]*ItemUserResponse, len(userProfile.Items))
 	for i, item := range userProfile.Items {
-		items[i] = &ItemUserDto{
+		items[i] = &ItemUserResponse{
 			ID:       item.ID.String(),
 			UserID:   userProfile.ID.String(),
 			Quantity: item.Quantity,
@@ -46,8 +47,9 @@ func NewUserProfileDTO(userProfile *domain.UserProfile) *UserProfileDTO {
 			Type:     int(item.Type),
 		}
 	}
-	return &UserProfileDTO{
+	return &UserTokenResponse{
 		ID:       userProfile.ID.String(),
+		OtherID:  userTrade.OtherID.String(),
 		Xp:       userProfile.Xp,
 		Roosters: roosters,
 		Items:    items,

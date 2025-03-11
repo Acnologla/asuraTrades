@@ -14,42 +14,54 @@ type UserTokenService struct {
 	roosterRepository port.RoosterRepository
 }
 
-func (s *UserTokenService) CreateToken(ctx context.Context, id domain.ID) (string, error) {
-	_, err := s.userRepository.Get(ctx, id)
+type GetTradeTokenResponseWrapper struct {
+	UserTrade   *domain.UserTrade
+	UserProfile *domain.UserProfile
+}
+
+func (s *UserTokenService) CreateToken(ctx context.Context, userTrade *domain.UserTrade) (string, error) {
+	_, err := s.userRepository.Get(ctx, userTrade.AuthorID)
+	if err != nil {
+		return "", err
+	}
+	_, err = s.userRepository.Get(ctx, userTrade.OtherID)
 	if err != nil {
 		return "", err
 	}
 
-	return s.tokenProvider.GenerateToken(id, 20)
+	return s.tokenProvider.GenerateToken(userTrade.AuthorID, userTrade.OtherID, 20)
 }
 
-func (s *UserTokenService) GetUserProfile(ctx context.Context, token string) (*domain.UserProfile, error) {
-	userID, err := s.tokenProvider.ValidateToken(token)
+func (s *UserTokenService) GetTradeTokenResponse(ctx context.Context, token string) (*GetTradeTokenResponseWrapper, error) {
+	userTrade, err := s.tokenProvider.ValidateToken(token)
+	authorID := userTrade.AuthorID
 	if err != nil {
 		return nil, err
 	}
 
-	user, err := s.userRepository.Get(ctx, userID)
+	user, err := s.userRepository.Get(ctx, authorID)
 	if err != nil {
 		return nil, err
 	}
 
-	items, err := s.itemRepository.GetUserItems(ctx, userID)
+	items, err := s.itemRepository.GetUserItems(ctx, authorID)
 	if err != nil {
 		return nil, err
 	}
 
-	roosters, err := s.roosterRepository.GetUserRoosters(ctx, userID)
+	roosters, err := s.roosterRepository.GetUserRoosters(ctx, authorID)
 	if err != nil {
 		return nil, err
 	}
 
-	return &domain.UserProfile{
-		User:     user,
-		Items:    items,
-		Roosters: roosters,
+	return &GetTradeTokenResponseWrapper{
+		UserTrade: userTrade,
+		UserProfile: &domain.UserProfile{
+			User:     user,
+			Items:    items,
+			Roosters: roosters,
+		},
 	}, nil
-
 }
 
 func NewUserTokenService(tp port.TokenProvider, ur port.UserRepository, ir port.ItemRepository, rr port.RoosterRepository) *UserTokenService {

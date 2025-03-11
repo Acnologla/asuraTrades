@@ -2,16 +2,16 @@ package controllers
 
 import (
 	"net/http"
-	"strconv"
 
-	"github.com/acnologla/asuraTrades/internal/adapters/http/dto"
+	"github.com/acnologla/asuraTrades/internal/adapters/http/response"
 	"github.com/acnologla/asuraTrades/internal/core/domain"
 	"github.com/acnologla/asuraTrades/internal/core/service"
 	"github.com/gin-gonic/gin"
 )
 
 type GenerateTokenRequest struct {
-	ID string `json:"id"`
+	AuthorID string `json:"id"`
+	OtherID  string `json:"other_id"`
 }
 
 type UserTokenController struct {
@@ -25,13 +25,13 @@ func (u *UserTokenController) GetUserProfile(c *gin.Context) {
 		c.String(http.StatusBadRequest, "Token not found")
 		return
 	}
-	userProfile, err := u.userTokenService.GetUserProfile(c, token)
+	tradeTokenResponse, err := u.userTokenService.GetTradeTokenResponse(c, token)
 	if err != nil {
 		c.String(http.StatusBadRequest, err.Error())
 		return
 	}
 
-	c.JSON(http.StatusOK, dto.NewUserProfileDTO(userProfile))
+	c.JSON(http.StatusOK, response.NewUserTokenResponse(tradeTokenResponse.UserTrade, tradeTokenResponse.UserProfile))
 }
 
 func (u *UserTokenController) GenerateToken(c *gin.Context) {
@@ -47,13 +47,14 @@ func (u *UserTokenController) GenerateToken(c *gin.Context) {
 		return
 	}
 
-	id, err := strconv.ParseUint(requestData.ID, 10, 64)
+	userTrade, err := domain.NewUserTrade(requestData.AuthorID, requestData.OtherID)
+
 	if err != nil {
 		c.String(http.StatusBadRequest, "Invalid ID format")
 		return
 	}
 
-	token, err := u.userTokenService.CreateToken(c, domain.ID(id))
+	token, err := u.userTokenService.CreateToken(c, userTrade)
 	if err != nil {
 		c.String(http.StatusBadRequest, err.Error())
 		return
