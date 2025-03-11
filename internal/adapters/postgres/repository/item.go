@@ -29,7 +29,7 @@ func (r *ItemRepository) Get(ctx context.Context, id domain.ID) (*domain.Item, e
 
 func (r *ItemRepository) GetUserItems(ctx context.Context, userID domain.ID) ([]*domain.Item, error) {
 	rows, err := r.db.Query(ctx,
-		"SELECT id, userid, quantity, item_id, type FROM items WHERE userid = $1",
+		"SELECT id, userid, quantity, itemid, type FROM items WHERE userid = $1",
 		userID)
 	if err != nil {
 		return nil, err
@@ -48,7 +48,7 @@ func (r *ItemRepository) Add(ctx context.Context, item *domain.Item) error {
 	cmdTag, err := r.db.Exec(ctx,
 		`UPDATE items 
 		SET quantity = quantity + 1 
-		WHERE userid = $1 AND item_id = $2 AND type = $3`,
+		WHERE userid = $1 AND itemid = $2 AND type = $3`,
 		item.UserID, item.ItemID, item.Type)
 
 	if err != nil {

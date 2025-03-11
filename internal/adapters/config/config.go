@@ -10,11 +10,13 @@ type (
 	}
 
 	HTTPConfig struct {
-		Port string
+		Port                  string
+		GenerateTokenPassword string
 	}
 
 	Config struct {
 		Postgres PostgresConfig
 		JWT      JWTConfig
+		HTTP     HTTPConfig
 	}
 )
