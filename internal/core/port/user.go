@@ -8,5 +8,5 @@ import (
 
 type UserRepository interface {
 	Get(ctx context.Context, id domain.ID) (*domain.User, error)
-	LockUpdate(ctx context.Context, id domain.ID) (func(err error) error, error)
+	LockUpdate(ctx context.Context, userID domain.ID) (func(err error) error, error)
 }

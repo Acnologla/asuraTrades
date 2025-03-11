@@ -5,7 +5,6 @@ import (
 
 	"github.com/acnologla/asuraTrades/internal/core/domain"
 	"github.com/acnologla/asuraTrades/internal/core/port"
-	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -14,12 +13,11 @@ type UserRepository struct {
 }
 
 func (r *UserRepository) Get(ctx context.Context, id domain.ID) (*domain.User, error) {
-	row, err := r.db.Query(ctx, "SELECT id, xp FROM users WHERE id = $1", id)
-	if err != nil {
-		return nil, err
-	}
-	defer row.Close()
-	user, err := pgx.CollectOneRow(row, pgx.RowToStructByName[*domain.User])
+	user := &domain.User{}
+
+	err := r.db.QueryRow(ctx,
+		"SELECT id, xp FROM users WHERE id = $1",
+		id).Scan(&user.ID, &user.Xp)
 
 	if err != nil {
 		return nil, err
@@ -27,7 +25,6 @@ func (r *UserRepository) Get(ctx context.Context, id domain.ID) (*domain.User, e
 
 	return user, nil
 }
-
 func (r *UserRepository) LockUpdate(ctx context.Context, id domain.ID) (func(error) error, error) {
 	tx, err := r.db.Begin(ctx)
 	if err != nil {

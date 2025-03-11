@@ -4,4 +4,5 @@ type Rooster struct {
 	ID     ID
 	UserID uint64
 	Origin string
+	Type   int
 }

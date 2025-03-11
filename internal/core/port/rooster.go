@@ -8,6 +8,7 @@ import (
 
 type RoosterRepository interface {
 	Get(ctx context.Context, id domain.ID) (*domain.Rooster, error)
+	GetUserRoosters(ctx context.Context, id domain.ID) ([]*domain.Rooster, error)
 	Delete(ctx context.Context, id domain.ID) error
 	Create(ctx context.Context, rooster *domain.Rooster) error
 }
