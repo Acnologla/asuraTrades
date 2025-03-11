@@ -28,15 +28,24 @@ func (r *UserRepository) Get(ctx context.Context, id domain.ID) (*domain.User, e
 	return user, nil
 }
 
-func (r *UserRepository) LockUpdate(ctx context.Context, id domain.ID) (func(context.Context) error, error) {
+func (r *UserRepository) LockUpdate(ctx context.Context, id domain.ID) (func(error) error, error) {
 	tx, err := r.db.Begin(ctx)
 	if err != nil {
-		return nil, nil
+		return nil, err
 	}
-	defer tx.Rollback(ctx)
 
-	tx.Exec(ctx, "SELECT pg_advisory_xact_lock($1)", id)
-	return tx.Commit, nil
+	_, err = tx.Exec(ctx, "SELECT pg_advisory_xact_lock($1)", id)
+	if err != nil {
+		tx.Rollback(ctx)
+		return nil, err
+	}
+
+	return func(err error) error {
+		if err != nil {
+			return tx.Rollback(ctx)
+		}
+		return tx.Commit(ctx)
+	}, nil
 }
 
 func NewUserRepository(db *pgxpool.Pool) port.UserRepository {
