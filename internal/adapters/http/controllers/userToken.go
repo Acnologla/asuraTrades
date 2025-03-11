@@ -53,6 +53,6 @@ func (u *UserTokenController) GenerateToken(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{"token": token})
 }
 
-func NewUserTokenController(generateTokenPassword string) *UserTokenController {
-	return &UserTokenController{generateTokenPassword: generateTokenPassword}
+func NewUserTokenController(generateTokenPassword string, userTokenService *service.UserTokenService) *UserTokenController {
+	return &UserTokenController{generateTokenPassword: generateTokenPassword, userTokenService: userTokenService}
 }

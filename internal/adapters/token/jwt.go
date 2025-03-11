@@ -11,11 +11,11 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-type JwtTokenService struct {
+type JwtTokenProvider struct {
 	secret []byte
 }
 
-func (j *JwtTokenService) GenerateToken(id domain.ID, minutesToExpire int) (string, error) {
+func (j *JwtTokenProvider) GenerateToken(id domain.ID, minutesToExpire int) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256,
 		jwt.MapClaims{
 			"sub": id,
@@ -25,7 +25,7 @@ func (j *JwtTokenService) GenerateToken(id domain.ID, minutesToExpire int) (stri
 	return token.SignedString(j.secret)
 }
 
-func (j *JwtTokenService) ValidateToken(tokenStr string) (domain.ID, error) {
+func (j *JwtTokenProvider) ValidateToken(tokenStr string) (domain.ID, error) {
 	token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
@@ -48,5 +48,5 @@ func (j *JwtTokenService) ValidateToken(tokenStr string) (domain.ID, error) {
 }
 
 func NewJwtTokenService(config config.JWTConfig) port.TokenProvider {
-	return &JwtTokenService{secret: []byte(config.Secret)}
+	return &JwtTokenProvider{secret: []byte(config.Secret)}
 }

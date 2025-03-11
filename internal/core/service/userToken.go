@@ -52,7 +52,7 @@ func (s *UserTokenService) GetUserProfile(ctx context.Context, token string) (*d
 
 }
 
-func New(tp port.TokenProvider, ur port.UserRepository, ir port.ItemRepository, rr port.RoosterRepository) *UserTokenService {
+func NewUserTokenService(tp port.TokenProvider, ur port.UserRepository, ir port.ItemRepository, rr port.RoosterRepository) *UserTokenService {
 	return &UserTokenService{
 		tokenProvider:     tp,
 		userRepository:    ur,
