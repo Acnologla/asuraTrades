@@ -4,7 +4,7 @@ import (
 	"github.com/acnologla/asuraTrades/internal/core/domain"
 )
 
-type ItemUserResponse struct {
+type UserItemResponse struct {
 	ID       string `json:"id"`
 	UserID   string `json:"user_id"`
 	Quantity int    `json:"quantity"`
@@ -24,7 +24,7 @@ type UserTokenResponse struct {
 	OtherID  string                 `json:"other_id"`
 	Xp       int                    `json:"xp"`
 	Roosters []*UserRoosterResponse `json:"roosters"`
-	Items    []*ItemUserResponse    `json:"items"`
+	Items    []*UserItemResponse    `json:"items"`
 }
 
 func NewUserTokenResponse(userTrade *domain.UserTrade, userProfile *domain.UserProfile) *UserTokenResponse {
@@ -37,9 +37,9 @@ func NewUserTokenResponse(userTrade *domain.UserTrade, userProfile *domain.UserP
 			Type:   rooster.Type,
 		}
 	}
-	items := make([]*ItemUserResponse, len(userProfile.Items))
+	items := make([]*UserItemResponse, len(userProfile.Items))
 	for i, item := range userProfile.Items {
-		items[i] = &ItemUserResponse{
+		items[i] = &UserItemResponse{
 			ID:       item.ID.String(),
 			UserID:   userProfile.ID.String(),
 			Quantity: item.Quantity,
