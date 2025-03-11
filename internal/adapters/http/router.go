@@ -11,6 +11,7 @@ import (
 func CreateAndServe(c config.HTTPConfig, userToken *controllers.UserTokenController) error {
 	r := gin.New()
 
+	r.GET("/user/:token", userToken.GetUserProfile)
 	r.POST("/token", userToken.GenerateToken)
 
 	return r.Run(fmt.Sprintf(":%s", c.Port))
