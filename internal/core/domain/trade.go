@@ -72,12 +72,6 @@ type Trade struct {
 	Users map[ID]*TradeUser
 }
 
-var tradeableItemTypes = map[ItemType]struct{}{
-	NormalType:   {},
-	CosmeticType: {},
-	ShardType:    {},
-} //use struct instead of bool to save memory
-
 func (t *Trade) AddItem(userID ID, item *TradeItem) error {
 	user, ok := t.Users[userID]
 	if !ok {
@@ -89,6 +83,25 @@ func (t *Trade) AddItem(userID ID, item *TradeItem) error {
 	}
 
 	return user.addItem(item)
+}
+
+func (t *Trade) UpdateUserStatus(userID ID, confirmed bool) error {
+	user, ok := t.Users[userID]
+	if !ok {
+		return errors.New("user not found")
+	}
+
+	user.Confirmed = confirmed
+	return nil
+}
+
+func (t *Trade) Done() bool {
+	for _, user := range t.Users {
+		if !user.Confirmed {
+			return false
+		}
+	}
+	return true
 }
 
 func (t *Trade) RemoveItem(userID ID, itemID uuid.UUID) error {

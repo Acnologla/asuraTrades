@@ -11,3 +11,9 @@ type TradeItemDTO struct {
 	User   domain.ID
 	Remove bool
 }
+
+type UpdateUserStatusDTO struct {
+	ID        uuid.UUID
+	Confirmed bool
+	UserID    domain.ID
+}

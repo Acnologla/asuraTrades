@@ -10,6 +10,11 @@ import (
 	"github.com/google/uuid"
 )
 
+type UpdateUserStatusWrapper struct {
+	Trade *domain.Trade
+	Done  bool
+}
+
 type TradeService struct {
 	cache       port.TradeCache
 	userService *UserService
@@ -31,6 +36,26 @@ func (s *TradeService) CreateTrade(ctx context.Context, tradeID uuid.UUID, autho
 	}
 
 	return trade, nil
+}
+
+func (s *TradeService) UpdateUserStatus(ctx context.Context, dto *dto.UpdateUserStatusDTO) (*UpdateUserStatusWrapper, error) {
+	trade, err := s.cache.Get(dto.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := trade.UpdateUserStatus(dto.UserID, dto.Confirmed); err != nil {
+		return nil, err
+	}
+
+	if _, err := s.saveAndReturn(dto.ID, trade); err != nil {
+		return nil, err
+	}
+
+	return &UpdateUserStatusWrapper{
+		Trade: trade,
+		Done:  trade.Done(),
+	}, nil
 }
 
 func (s *TradeService) getUserItem(ctx context.Context, dto *dto.TradeItemDTO) (*domain.TradeItem, error) {
