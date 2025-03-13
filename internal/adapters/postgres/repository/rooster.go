@@ -5,6 +5,7 @@ import (
 
 	"github.com/acnologla/asuraTrades/internal/core/domain"
 	"github.com/acnologla/asuraTrades/internal/core/port"
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -12,7 +13,7 @@ type RoosterRepository struct {
 	db *pgxpool.Pool
 }
 
-func (r *RoosterRepository) Get(ctx context.Context, id domain.ID) (*domain.Rooster, error) {
+func (r *RoosterRepository) Get(ctx context.Context, id uuid.UUID) (*domain.Rooster, error) {
 	rooster := &domain.Rooster{}
 
 	err := r.db.QueryRow(ctx,
@@ -48,7 +49,7 @@ func (r *RoosterRepository) GetUserRoosters(ctx context.Context, userID domain.I
 	return roosters, nil
 }
 
-func (r *RoosterRepository) Delete(ctx context.Context, id domain.ID) error {
+func (r *RoosterRepository) Delete(ctx context.Context, id uuid.UUID) error {
 	_, err := r.db.Exec(ctx,
 		"DELETE FROM rooster WHERE id = $1",
 		id)

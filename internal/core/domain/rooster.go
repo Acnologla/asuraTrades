@@ -7,4 +7,5 @@ type Rooster struct {
 	UserID ID
 	Origin string
 	Type   int
+	Equip  bool
 }

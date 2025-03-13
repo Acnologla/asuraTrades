@@ -1,6 +1,10 @@
 package domain
 
-import "github.com/google/uuid"
+import (
+	"errors"
+
+	"github.com/google/uuid"
+)
 
 type TradeItemType int
 
@@ -15,13 +19,74 @@ type TradeItem struct {
 	Item    *Item    // can be nil
 }
 
+func NewTradeItemRooster(rooster *Rooster) *TradeItem {
+	return &TradeItem{
+		Type:    RoosterTradeType,
+		Rooster: rooster,
+	}
+}
+
+func NewTradeItemItem(item *Item) *TradeItem {
+	return &TradeItem{
+		Type: ItemTradeType,
+		Item: item,
+	}
+}
+
 type TradeUser struct {
 	ID        ID
 	Items     []*TradeItem
 	Confirmed bool
 }
 
+func (user *TradeUser) addRoster(item *TradeItem) error {
+	if item.Rooster.Equip {
+		return errors.New("rooster already equipped")
+	}
+	for _, it := range user.Items {
+		if it.Type == RoosterTradeType && it.Rooster.ID == item.Rooster.ID {
+			return errors.New("rooster already added")
+		}
+	}
+	user.Items = append(user.Items, item)
+	return nil
+}
+
+func (user *TradeUser) addItem(item *TradeItem) error {
+	if _, ok := tradeableItemTypes[item.Item.Type]; !ok {
+		return errors.New("item type not tradeable")
+	}
+
+	for _, it := range user.Items {
+		if it.Type == ItemTradeType && it.Item.ID == item.Item.ID {
+			it.Item.Quantity++
+			return nil
+		}
+	}
+	user.Items = append(user.Items, item)
+	return nil
+}
+
 type Trade struct {
 	ID    uuid.UUID
 	Users map[ID]*TradeUser
+}
+
+var tradeableItemTypes = map[ItemType]struct{}{
+	NormalType:   {},
+	CosmeticType: {},
+	ShardType:    {},
+} //use struct instead of bool to save memory
+
+func (t *Trade) AddItem(userID ID, item *TradeItem) error {
+	user, ok := t.Users[userID]
+	if !ok {
+		return errors.New("user not found")
+	}
+
+	if item.Type == RoosterTradeType {
+		return user.addRoster(item)
+	}
+
+	return user.addItem(item)
 }

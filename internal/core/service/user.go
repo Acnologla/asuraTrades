@@ -5,6 +5,7 @@ import (
 
 	"github.com/acnologla/asuraTrades/internal/core/domain"
 	"github.com/acnologla/asuraTrades/internal/core/port"
+	"github.com/google/uuid"
 )
 
 type UserService struct {
@@ -15,6 +16,14 @@ type UserService struct {
 
 func (s *UserService) Get(ctx context.Context, id domain.ID) (*domain.User, error) {
 	return s.userRepository.Get(ctx, id)
+}
+
+func (s *UserService) GetItem(ctx context.Context, id uuid.UUID) (*domain.Item, error) {
+	return s.itemRepository.Get(ctx, id)
+}
+
+func (s *UserService) GetRooster(ctx context.Context, id uuid.UUID) (*domain.Rooster, error) {
+	return s.roosterRepository.Get(ctx, id)
 }
 
 func (s *UserService) GetUserProfile(ctx context.Context, id domain.ID) (*domain.UserProfile, error) {

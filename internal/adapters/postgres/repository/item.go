@@ -5,6 +5,7 @@ import (
 
 	"github.com/acnologla/asuraTrades/internal/core/domain"
 	"github.com/acnologla/asuraTrades/internal/core/port"
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -12,7 +13,7 @@ type ItemRepository struct {
 	db *pgxpool.Pool
 }
 
-func (r *ItemRepository) Get(ctx context.Context, id domain.ID) (*domain.Item, error) {
+func (r *ItemRepository) Get(ctx context.Context, id uuid.UUID) (*domain.Item, error) {
 	item := &domain.Item{}
 
 	err := r.db.QueryRow(ctx,
@@ -74,7 +75,7 @@ func (r *ItemRepository) Add(ctx context.Context, item *domain.Item) error {
 	return nil
 }
 
-func (r *ItemRepository) Remove(ctx context.Context, id domain.ID) error {
+func (r *ItemRepository) Remove(ctx context.Context, id uuid.UUID) error {
 	cmdTag, err := r.db.Exec(ctx,
 		`UPDATE item 
 		SET quantity = quantity - 1 

@@ -14,6 +14,7 @@ import (
 	reflect "reflect"
 
 	domain "github.com/acnologla/asuraTrades/internal/core/domain"
+	uuid "github.com/google/uuid"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -56,7 +57,7 @@ func (mr *MockRoosterRepositoryMockRecorder) Create(ctx, rooster any) *gomock.Ca
 }
 
 // Delete mocks base method.
-func (m *MockRoosterRepository) Delete(ctx context.Context, id domain.ID) error {
+func (m *MockRoosterRepository) Delete(ctx context.Context, id uuid.UUID) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Delete", ctx, id)
 	ret0, _ := ret[0].(error)
@@ -70,7 +71,7 @@ func (mr *MockRoosterRepositoryMockRecorder) Delete(ctx, id any) *gomock.Call {
 }
 
 // Get mocks base method.
-func (m *MockRoosterRepository) Get(ctx context.Context, id domain.ID) (*domain.Rooster, error) {
+func (m *MockRoosterRepository) Get(ctx context.Context, id uuid.UUID) (*domain.Rooster, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Get", ctx, id)
 	ret0, _ := ret[0].(*domain.Rooster)

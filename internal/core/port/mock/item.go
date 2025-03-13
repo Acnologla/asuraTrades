@@ -14,6 +14,7 @@ import (
 	reflect "reflect"
 
 	domain "github.com/acnologla/asuraTrades/internal/core/domain"
+	uuid "github.com/google/uuid"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -56,7 +57,7 @@ func (mr *MockItemRepositoryMockRecorder) Add(ctx, item any) *gomock.Call {
 }
 
 // Get mocks base method.
-func (m *MockItemRepository) Get(ctx context.Context, id domain.ID) (*domain.Item, error) {
+func (m *MockItemRepository) Get(ctx context.Context, id uuid.UUID) (*domain.Item, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Get", ctx, id)
 	ret0, _ := ret[0].(*domain.Item)
@@ -86,7 +87,7 @@ func (mr *MockItemRepositoryMockRecorder) GetUserItems(ctx, id any) *gomock.Call
 }
 
 // Remove mocks base method.
-func (m *MockItemRepository) Remove(ctx context.Context, id domain.ID) error {
+func (m *MockItemRepository) Remove(ctx context.Context, id uuid.UUID) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Remove", ctx, id)
 	ret0, _ := ret[0].(error)
