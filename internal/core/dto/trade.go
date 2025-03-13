@@ -6,7 +6,8 @@ import (
 )
 
 type TradeItemDTO struct {
-	Type domain.TradeItemType
-	ID   uuid.UUID
-	User domain.ID
+	Type   domain.TradeItemType
+	ID     uuid.UUID
+	User   domain.ID
+	Remove bool
 }

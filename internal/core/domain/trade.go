@@ -90,3 +90,38 @@ func (t *Trade) AddItem(userID ID, item *TradeItem) error {
 
 	return user.addItem(item)
 }
+
+func (t *Trade) RemoveItem(userID ID, itemID uuid.UUID) error {
+	user, ok := t.Users[userID]
+	if !ok {
+		return errors.New("user not found")
+	}
+
+	for i, item := range user.Items {
+		if item.Type == ItemTradeType && item.Item.ID == itemID {
+			if item.Item.Quantity > 1 {
+				item.Item.Quantity--
+				return nil
+			}
+
+			user.Items = append(user.Items[:i], user.Items[i+1:]...)
+			return nil
+		}
+	}
+
+	return errors.New("item not found")
+}
+
+func NewTrade(id uuid.UUID, author, other ID) *Trade {
+	return &Trade{
+		ID: id,
+		Users: map[ID]*TradeUser{
+			author: {
+				ID: author,
+			},
+			other: {
+				ID: other,
+			},
+		},
+	}
+}
