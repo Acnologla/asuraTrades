@@ -6,6 +6,8 @@ import (
 	"github.com/acnologla/asuraTrades/internal/core/domain"
 )
 
+//go:generate mockgen -source=$GOFILE -destination=mock/$GOFILE -package=mock
+
 type RoosterRepository interface {
 	Get(ctx context.Context, id domain.ID) (*domain.Rooster, error)
 	GetUserRoosters(ctx context.Context, id domain.ID) ([]*domain.Rooster, error)
