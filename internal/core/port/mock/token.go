@@ -41,18 +41,18 @@ func (m *MockTokenProvider) EXPECT() *MockTokenProviderMockRecorder {
 }
 
 // GenerateToken mocks base method.
-func (m *MockTokenProvider) GenerateToken(authorID, offerID domain.ID, minutesToExpire int) (string, error) {
+func (m *MockTokenProvider) GenerateToken(userTrade *domain.UserTrade, minutesToExpire int) (string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GenerateToken", authorID, offerID, minutesToExpire)
+	ret := m.ctrl.Call(m, "GenerateToken", userTrade, minutesToExpire)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GenerateToken indicates an expected call of GenerateToken.
-func (mr *MockTokenProviderMockRecorder) GenerateToken(authorID, offerID, minutesToExpire any) *gomock.Call {
+func (mr *MockTokenProviderMockRecorder) GenerateToken(userTrade, minutesToExpire any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GenerateToken", reflect.TypeOf((*MockTokenProvider)(nil).GenerateToken), authorID, offerID, minutesToExpire)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GenerateToken", reflect.TypeOf((*MockTokenProvider)(nil).GenerateToken), userTrade, minutesToExpire)
 }
 
 // ValidateToken mocks base method.

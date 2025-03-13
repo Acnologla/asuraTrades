@@ -21,11 +21,10 @@ type GetTradeTokenResponseWrapper struct {
 }
 
 func (s *UserTokenService) CreateToken(ctx context.Context, userTradeDto *dto.GenerateUserTokenDTO) (string, error) {
-	userTrade, err := domain.NewUserTrade(userTradeDto.AuthorID, userTradeDto.AuthorID, userTradeDto.TradeID)
+	userTrade, err := domain.NewUserTrade(userTradeDto.AuthorID, userTradeDto.OtherID, userTradeDto.TradeID)
 	if err != nil {
 		return "", err
 	}
-
 	_, err = s.userRepository.Get(ctx, userTrade.AuthorID)
 	if err != nil {
 		return "", err
