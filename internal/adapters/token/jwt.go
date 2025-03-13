@@ -15,11 +15,12 @@ type JwtTokenProvider struct {
 	secret []byte
 }
 
-func (j *JwtTokenProvider) GenerateToken(authorID, otherID domain.ID, minutesToExpire int) (string, error) {
+func (j *JwtTokenProvider) GenerateToken(trade *domain.UserTrade, minutesToExpire int) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256,
 		jwt.MapClaims{
-			"sub":     authorID,
-			"otherID": otherID,
+			"sub":     trade.AuthorID.String(),
+			"otherID": trade.OtherID.String(),
+			"tradeID": trade.TradeID.String(),
 			"exp":     time.Now().Add(time.Minute * time.Duration(minutesToExpire)).Unix(),
 		})
 
@@ -42,10 +43,8 @@ func (j *JwtTokenProvider) ValidateToken(tokenStr string) (*domain.UserTrade, er
 	}
 
 	if claims, ok := token.Claims.(jwt.MapClaims); ok {
-		return &domain.UserTrade{
-			AuthorID: domain.ID(claims["sub"].(float64)),
-			OtherID:  domain.ID(claims["otherID"].(float64)),
-		}, nil
+		sub, otherID, tradeID := claims["sub"].(string), claims["otherID"].(string), claims["tradeID"].(string)
+		return domain.NewUserTrade(sub, otherID, tradeID)
 	}
 
 	return nil, errors.New("token without id")

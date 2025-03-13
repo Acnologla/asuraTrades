@@ -36,7 +36,7 @@ func (s *UserTokenService) CreateToken(ctx context.Context, userTradeDto *dto.Ge
 		return "", err
 	}
 
-	return s.tokenProvider.GenerateToken(userTrade.AuthorID, userTrade.OtherID, 20)
+	return s.tokenProvider.GenerateToken(userTrade, 20)
 }
 
 func (s *UserTokenService) GetTradeTokenResponse(ctx context.Context, token string) (*GetTradeTokenResponseWrapper, error) {
