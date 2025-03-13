@@ -28,8 +28,8 @@ func main() {
 	roosterRepo := repository.NewRoosterRepository(postgresConnection)
 
 	// initialize services
-
-	userTokenService := service.NewUserTokenService(jwtAdapter, userRepo, itemRepo, roosterRepo)
+	userService := service.NewUserService(userRepo, roosterRepo, itemRepo)
+	userTokenService := service.NewUserTokenService(jwtAdapter, userService)
 
 	// initialize controllers
 	userTokenController := controllers.NewUserTokenController(config.HTTPConfig.GenerateTokenPassword, userTokenService)

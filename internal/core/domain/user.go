@@ -28,6 +28,14 @@ type UserProfile struct {
 	Items    []*Item
 }
 
+func NewUserProfile(user *User, roosters []*Rooster, items []*Item) *UserProfile {
+	return &UserProfile{
+		User:     user,
+		Roosters: roosters,
+		Items:    items,
+	}
+}
+
 type UserTrade struct {
 	AuthorID ID
 	OtherID  ID

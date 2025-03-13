@@ -32,6 +32,7 @@ func TestGetTradeTokenResponse(t *testing.T) {
 	mockUserRepo := mock.NewMockUserRepository(ctrl)
 	mockItemRepo := mock.NewMockItemRepository(ctrl)
 	mockRoosterRepo := mock.NewMockRoosterRepository(ctrl)
+	userService := service.NewUserService(mockUserRepo, mockRoosterRepo, mockItemRepo)
 
 	somerandomID := generateSnowflakeLikeID()
 	somerandomID2 := generateSnowflakeLikeID()
@@ -127,7 +128,7 @@ func TestGetTradeTokenResponse(t *testing.T) {
 		},
 	}
 
-	service := service.NewUserTokenService(mockTokenProvider, mockUserRepo, mockItemRepo, mockRoosterRepo)
+	service := service.NewUserTokenService(mockTokenProvider, userService)
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -150,6 +151,7 @@ func TestCreateToken(t *testing.T) {
 	mockItemRepo := mock.NewMockItemRepository(ctrl)
 	mockRoosterRepo := mock.NewMockRoosterRepository(ctrl)
 
+	userService := service.NewUserService(mockUserRepo, mockRoosterRepo, mockItemRepo)
 	somerandomID := generateSnowflakeLikeID()
 	somerandomID2 := generateSnowflakeLikeID()
 	dto := &dto.GenerateUserTokenDTO{
@@ -202,7 +204,7 @@ func TestCreateToken(t *testing.T) {
 		},
 	}
 
-	service := service.NewUserTokenService(mockTokenProvider, mockUserRepo, mockItemRepo, mockRoosterRepo)
+	service := service.NewUserTokenService(mockTokenProvider, userService)
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {

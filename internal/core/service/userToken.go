@@ -9,10 +9,8 @@ import (
 )
 
 type UserTokenService struct {
-	tokenProvider     port.TokenProvider
-	userRepository    port.UserRepository
-	itemRepository    port.ItemRepository
-	roosterRepository port.RoosterRepository
+	tokenProvider port.TokenProvider
+	userService   *UserService
 }
 
 type GetTradeTokenResponseWrapper struct {
@@ -25,17 +23,21 @@ func (s *UserTokenService) CreateToken(ctx context.Context, userTradeDto *dto.Ge
 	if err != nil {
 		return "", err
 	}
-	_, err = s.userRepository.Get(ctx, userTrade.AuthorID)
+	_, err = s.userService.Get(ctx, userTrade.AuthorID)
 	if err != nil {
 		return "", err
 	}
 
-	_, err = s.userRepository.Get(ctx, userTrade.OtherID)
+	_, err = s.userService.Get(ctx, userTrade.OtherID)
 	if err != nil {
 		return "", err
 	}
 
 	return s.tokenProvider.GenerateToken(userTrade, 20)
+}
+
+func (s *UserTokenService) ValidateToken(token string) (*domain.UserTrade, error) {
+	return s.tokenProvider.ValidateToken(token)
 }
 
 func (s *UserTokenService) GetTradeTokenResponse(ctx context.Context, token string) (*GetTradeTokenResponseWrapper, error) {
@@ -45,36 +47,20 @@ func (s *UserTokenService) GetTradeTokenResponse(ctx context.Context, token stri
 		return nil, err
 	}
 
-	user, err := s.userRepository.Get(ctx, authorID)
-	if err != nil {
-		return nil, err
-	}
-
-	items, err := s.itemRepository.GetUserItems(ctx, authorID)
-	if err != nil {
-		return nil, err
-	}
-
-	roosters, err := s.roosterRepository.GetUserRoosters(ctx, authorID)
+	profile, err := s.userService.GetUserProfile(ctx, authorID)
 	if err != nil {
 		return nil, err
 	}
 
 	return &GetTradeTokenResponseWrapper{
-		UserTrade: userTrade,
-		UserProfile: &domain.UserProfile{
-			User:     user,
-			Items:    items,
-			Roosters: roosters,
-		},
+		UserTrade:   userTrade,
+		UserProfile: profile,
 	}, nil
 }
 
-func NewUserTokenService(tp port.TokenProvider, ur port.UserRepository, ir port.ItemRepository, rr port.RoosterRepository) *UserTokenService {
+func NewUserTokenService(tp port.TokenProvider, us *UserService) *UserTokenService {
 	return &UserTokenService{
-		tokenProvider:     tp,
-		userRepository:    ur,
-		itemRepository:    ir,
-		roosterRepository: rr,
+		tokenProvider: tp,
+		userService:   us,
 	}
 }
