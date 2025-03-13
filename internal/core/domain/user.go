@@ -1,6 +1,10 @@
 package domain
 
-import "strconv"
+import (
+	"strconv"
+
+	"github.com/google/uuid"
+)
 
 type ID uint64
 
@@ -27,9 +31,10 @@ type UserProfile struct {
 type UserTrade struct {
 	AuthorID ID
 	OtherID  ID
+	TradeID  uuid.UUID
 }
 
-func NewUserTrade(authorID, otherID string) (*UserTrade, error) {
+func NewUserTrade(authorID, otherID, tradeID string) (*UserTrade, error) {
 	author, err := NewID(authorID)
 	if err != nil {
 		return nil, err
@@ -41,5 +46,6 @@ func NewUserTrade(authorID, otherID string) (*UserTrade, error) {
 	return &UserTrade{
 		AuthorID: author,
 		OtherID:  other,
+		TradeID:  uuid.MustParse(tradeID),
 	}, nil
 }

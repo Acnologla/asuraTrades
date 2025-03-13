@@ -1,10 +1,11 @@
 package controllers
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/acnologla/asuraTrades/internal/adapters/http/response"
-	"github.com/acnologla/asuraTrades/internal/core/domain"
+	"github.com/acnologla/asuraTrades/internal/core/dto"
 	"github.com/acnologla/asuraTrades/internal/core/service"
 	"github.com/gin-gonic/gin"
 )
@@ -12,6 +13,7 @@ import (
 type GenerateTokenRequest struct {
 	AuthorID string `json:"id"`
 	OtherID  string `json:"other_id"`
+	TradeID  string `json:"trade_id"`
 }
 
 type UserTokenController struct {
@@ -34,10 +36,17 @@ func (u *UserTokenController) GetUserProfile(c *gin.Context) {
 	c.JSON(http.StatusOK, response.NewUserTokenResponse(tradeTokenResponse.UserTrade, tradeTokenResponse.UserProfile))
 }
 
-func (u *UserTokenController) GenerateToken(c *gin.Context) {
+func (u *UserTokenController) authenticateRequest(c *gin.Context) error {
 	password := c.Request.Header.Get("Password")
 	if password != u.generateTokenPassword {
-		c.String(http.StatusNotFound, "Unautorized")
+		return errors.New("unauthorized")
+	}
+	return nil
+}
+
+func (u *UserTokenController) GenerateToken(c *gin.Context) {
+	if err := u.authenticateRequest(c); err != nil {
+		c.String(http.StatusUnauthorized, err.Error())
 		return
 	}
 
@@ -47,14 +56,7 @@ func (u *UserTokenController) GenerateToken(c *gin.Context) {
 		return
 	}
 
-	userTrade, err := domain.NewUserTrade(requestData.AuthorID, requestData.OtherID)
-
-	if err != nil {
-		c.String(http.StatusBadRequest, "Invalid ID format")
-		return
-	}
-
-	token, err := u.userTokenService.CreateToken(c, userTrade)
+	token, err := u.userTokenService.CreateToken(c.Request.Context(), dto.NewGenerateUserTokenDTO(requestData.AuthorID, requestData.OtherID, requestData.TradeID))
 	if err != nil {
 		c.String(http.StatusBadRequest, err.Error())
 		return

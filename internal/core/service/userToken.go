@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/acnologla/asuraTrades/internal/core/domain"
+	"github.com/acnologla/asuraTrades/internal/core/dto"
 	"github.com/acnologla/asuraTrades/internal/core/port"
 )
 
@@ -19,11 +20,17 @@ type GetTradeTokenResponseWrapper struct {
 	UserProfile *domain.UserProfile
 }
 
-func (s *UserTokenService) CreateToken(ctx context.Context, userTrade *domain.UserTrade) (string, error) {
-	_, err := s.userRepository.Get(ctx, userTrade.AuthorID)
+func (s *UserTokenService) CreateToken(ctx context.Context, userTradeDto *dto.GenerateUserTokenDTO) (string, error) {
+	userTrade, err := domain.NewUserTrade(userTradeDto.AuthorID, userTradeDto.AuthorID, userTradeDto.TradeID)
 	if err != nil {
 		return "", err
 	}
+
+	_, err = s.userRepository.Get(ctx, userTrade.AuthorID)
+	if err != nil {
+		return "", err
+	}
+
 	_, err = s.userRepository.Get(ctx, userTrade.OtherID)
 	if err != nil {
 		return "", err
