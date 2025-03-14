@@ -132,15 +132,15 @@ func (s *TradeService) UpdateUserStatus(ctx context.Context, dto *dto.UpdateUser
 	}, nil
 }
 
-func (s *TradeService) getUserItem(ctx context.Context, dto *dto.TradeItemDTO) (*domain.TradeItem, error) {
-	if dto.Type == domain.ItemTradeType {
-		i, err := s.userService.GetItem(ctx, dto.ID)
+func (s *TradeService) getUserItem(ctx context.Context, id uuid.UUID, t domain.TradeItemType) (*domain.TradeItem, error) {
+	if t == domain.ItemTradeType {
+		i, err := s.userService.GetItem(ctx, id)
 		if err != nil {
 			return nil, err
 		}
 		return domain.NewTradeItemItem(i), nil
 	}
-	r, err := s.userService.GetRooster(ctx, dto.ID)
+	r, err := s.userService.GetRooster(ctx, id)
 	if err != nil {
 		return nil, err
 	}
@@ -167,7 +167,7 @@ func (s *TradeService) UpdateItem(ctx context.Context, tradeID uuid.UUID, item *
 		return s.saveAndReturn(tradeID, trade)
 	}
 
-	tradeItem, err := s.getUserItem(ctx, item)
+	tradeItem, err := s.getUserItem(ctx, item.ID, item.Type)
 	if err != nil {
 		return nil, err
 	}

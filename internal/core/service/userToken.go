@@ -18,6 +18,8 @@ type GetTradeTokenResponseWrapper struct {
 	UserProfile *domain.UserProfile
 }
 
+const TOKEN_EXPIRATION_TIME = 20
+
 func (s *UserTokenService) CreateToken(ctx context.Context, userTradeDto *dto.GenerateUserTokenDTO) (string, error) {
 	userTrade, err := domain.NewUserTrade(userTradeDto.AuthorID, userTradeDto.OtherID, userTradeDto.TradeID)
 	if err != nil {
@@ -33,7 +35,7 @@ func (s *UserTokenService) CreateToken(ctx context.Context, userTradeDto *dto.Ge
 		return "", err
 	}
 
-	return s.tokenProvider.GenerateToken(userTrade, 20)
+	return s.tokenProvider.GenerateToken(userTrade, TOKEN_EXPIRATION_TIME)
 }
 
 func (s *UserTokenService) ValidateToken(token string) (*domain.UserTrade, error) {
