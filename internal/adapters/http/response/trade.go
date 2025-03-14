@@ -3,9 +3,8 @@ package response
 import "github.com/acnologla/asuraTrades/internal/core/domain"
 
 type TradeItemResponse struct {
-	Type    int                  `json:"type"`
-	Rooster *UserRoosterResponse `json:"rooster"`
-	Item    *UserItemResponse    `json:"item"`
+	Type string `json:"type"`
+	Data any    `json:"data"`
 }
 
 type TradeUserResponse struct {
@@ -15,6 +14,7 @@ type TradeUserResponse struct {
 }
 
 type TradeResponse struct {
+	Type  string                        `json:"type"` //maybe changer this type later
 	ID    string                        `json:"id"`
 	Users map[string]*TradeUserResponse `json:"users"`
 }
@@ -25,17 +25,17 @@ func NewTradeResponse(trade *domain.Trade) *TradeResponse {
 		items := make([]*TradeItemResponse, len(user.Items))
 		for i, item := range user.Items {
 			items[i] = &TradeItemResponse{
-				Type: int(item.Type),
+				Type: item.Type.String(),
 			}
 			if item.Type == domain.RoosterTradeType {
-				items[i].Rooster = &UserRoosterResponse{
+				items[i].Data = &UserRoosterResponse{
 					ID:     item.Rooster.ID.String(),
 					UserID: user.ID.String(),
 					Origin: item.Rooster.Origin,
 					Type:   item.Rooster.Type,
 				}
 			} else {
-				items[i].Item = &UserItemResponse{
+				items[i].Data = &UserItemResponse{
 					ID:       item.Item.ID.String(),
 					UserID:   user.ID.String(),
 					Quantity: item.Item.Quantity,
@@ -51,6 +51,7 @@ func NewTradeResponse(trade *domain.Trade) *TradeResponse {
 		}
 	}
 	return &TradeResponse{
+		Type:  "trade_update",
 		ID:    trade.ID.String(),
 		Users: users,
 	}

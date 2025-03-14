@@ -13,6 +13,17 @@ const (
 	RoosterTradeType
 )
 
+func (t TradeItemType) String() string {
+	switch t {
+	case ItemTradeType:
+		return "item"
+	case RoosterTradeType:
+		return "rooster"
+	}
+
+	return ""
+}
+
 type TradeItem struct {
 	Type    TradeItemType
 	Rooster *Rooster // Will be nil if Type is ItemTradeType
