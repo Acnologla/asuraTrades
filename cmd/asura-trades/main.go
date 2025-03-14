@@ -1,6 +1,8 @@
 package main
 
 import (
+	"context"
+
 	"github.com/acnologla/asuraTrades/internal/adapters/config"
 	"github.com/acnologla/asuraTrades/internal/adapters/http"
 	"github.com/acnologla/asuraTrades/internal/adapters/http/controllers"
@@ -12,6 +14,7 @@ import (
 
 func main() {
 	config, err := config.LoadConfig()
+	context := context.Background()
 	if err != nil {
 		panic(err)
 	}
@@ -19,7 +22,7 @@ func main() {
 	// initialize adapters
 
 	jwtAdapter := token.NewJwtTokenService(config.JWTConfig)
-	postgresConnection := postgres.New(config.PostgresConfig)
+	postgresConnection := postgres.NewConnection(context, config.PostgresConfig)
 
 	// initialize repositories
 

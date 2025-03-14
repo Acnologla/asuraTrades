@@ -3,22 +3,22 @@ package repository
 import (
 	"context"
 
+	"github.com/acnologla/asuraTrades/internal/adapters/postgres"
 	"github.com/acnologla/asuraTrades/internal/core/domain"
 	"github.com/acnologla/asuraTrades/internal/core/port"
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type RoosterRepository struct {
-	db *pgxpool.Pool
+	db postgres.Database
 }
 
 func (r *RoosterRepository) Get(ctx context.Context, id uuid.UUID) (*domain.Rooster, error) {
 	rooster := &domain.Rooster{}
 
 	err := r.db.QueryRow(ctx,
-		"SELECT id, userid, type FROM rooster WHERE id = $1",
-		id).Scan(&rooster.ID, &rooster.UserID)
+		"SELECT id, userid, type, equip FROM rooster WHERE id = $1",
+		id).Scan(&rooster.ID, &rooster.UserID, &rooster.Type, &rooster.Equip)
 
 	if err != nil {
 		return nil, err
@@ -29,7 +29,7 @@ func (r *RoosterRepository) Get(ctx context.Context, id uuid.UUID) (*domain.Roos
 
 func (r *RoosterRepository) GetUserRoosters(ctx context.Context, userID domain.ID) ([]*domain.Rooster, error) {
 	rows, err := r.db.Query(ctx,
-		"SELECT id, userid, type FROM rooster WHERE userid = $1",
+		"SELECT id, userid, type, equip FROM rooster WHERE userid = $1",
 		userID)
 	if err != nil {
 		return nil, err
@@ -40,7 +40,7 @@ func (r *RoosterRepository) GetUserRoosters(ctx context.Context, userID domain.I
 
 	for rows.Next() {
 		rooster := &domain.Rooster{}
-		if err := rows.Scan(&rooster.ID, &rooster.UserID, &rooster.Type); err != nil {
+		if err := rows.Scan(&rooster.ID, &rooster.UserID, &rooster.Type, &rooster.Equip); err != nil {
 			return nil, err
 		}
 		roosters = append(roosters, rooster)
@@ -72,6 +72,6 @@ func (r *RoosterRepository) Create(ctx context.Context, rooster *domain.Rooster)
 	return nil
 }
 
-func NewRoosterRepository(db *pgxpool.Pool) port.RoosterRepository {
+func NewRoosterRepository(db postgres.Database) port.RoosterRepository {
 	return &RoosterRepository{db: db}
 }

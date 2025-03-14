@@ -15,8 +15,8 @@ const (
 
 type TradeItem struct {
 	Type    TradeItemType
-	Rooster *Rooster // can be nil
-	Item    *Item    // can be nil
+	Rooster *Rooster // Will be nil if Type is ItemTradeType
+	Item    *Item    // Will be nil if Type is RoosterTradeType
 }
 
 func NewTradeItemRooster(rooster *Rooster) *TradeItem {
@@ -40,8 +40,8 @@ type TradeUser struct {
 }
 
 func (user *TradeUser) addRoster(item *TradeItem) error {
-	if item.Rooster.Equip {
-		return errors.New("rooster already equipped")
+	if !item.Rooster.IsTradeable() {
+		return errors.New("rooster is not tradeable")
 	}
 	for _, it := range user.Items {
 		if it.Type == RoosterTradeType && it.Rooster.ID == item.Rooster.ID {
@@ -53,8 +53,8 @@ func (user *TradeUser) addRoster(item *TradeItem) error {
 }
 
 func (user *TradeUser) addItem(item *TradeItem) error {
-	if _, ok := tradeableItemTypes[item.Item.Type]; !ok {
-		return errors.New("item type not tradeable")
+	if !item.Item.IsTradeable() {
+		return errors.New("item is not tradeable")
 	}
 
 	for _, it := range user.Items {
@@ -130,10 +130,12 @@ func NewTrade(id uuid.UUID, author, other ID) *Trade {
 		ID: id,
 		Users: map[ID]*TradeUser{
 			author: {
-				ID: author,
+				ID:    author,
+				Items: []*TradeItem{},
 			},
 			other: {
-				ID: other,
+				ID:    other,
+				Items: []*TradeItem{},
 			},
 		},
 	}

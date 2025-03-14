@@ -3,14 +3,14 @@ package repository
 import (
 	"context"
 
+	"github.com/acnologla/asuraTrades/internal/adapters/postgres"
 	"github.com/acnologla/asuraTrades/internal/core/domain"
 	"github.com/acnologla/asuraTrades/internal/core/port"
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type ItemRepository struct {
-	db *pgxpool.Pool
+	db postgres.Database
 }
 
 func (r *ItemRepository) Get(ctx context.Context, id uuid.UUID) (*domain.Item, error) {
@@ -99,6 +99,6 @@ func (r *ItemRepository) Remove(ctx context.Context, id uuid.UUID) error {
 	return nil
 }
 
-func NewItemRepository(db *pgxpool.Pool) port.ItemRepository {
+func NewItemRepository(db postgres.Database) port.ItemRepository {
 	return &ItemRepository{db: db}
 }

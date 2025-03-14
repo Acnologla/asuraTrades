@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/acnologla/asuraTrades/internal/core/domain"
 	"github.com/acnologla/asuraTrades/internal/core/dto"
@@ -18,6 +19,7 @@ type UpdateUserStatusWrapper struct {
 type TradeService struct {
 	cache       port.TradeCache
 	userService *UserService
+	userTx      port.TradeTxProvider
 }
 
 func (s *TradeService) GetTrade(ctx context.Context, id uuid.UUID) (*domain.Trade, error) {
@@ -36,6 +38,78 @@ func (s *TradeService) CreateTrade(ctx context.Context, tradeID uuid.UUID, autho
 	}
 
 	return trade, nil
+}
+
+func (s *TradeService) swapUserItems(ctx context.Context, user *domain.TradeUser, otherID domain.ID, adapters port.UserTradeTxAdapters) error {
+	for _, item := range user.Items {
+		if item.Type == domain.ItemTradeType {
+			if _, err := adapters.ItemRepository.Get(ctx, item.Item.ID); err != nil {
+				return err
+			}
+
+			if err := adapters.ItemRepository.Remove(ctx, item.Item.ID); err != nil {
+				return err
+			}
+
+			if err := adapters.ItemRepository.Add(ctx, domain.NewItem(otherID, item.Item.ItemID, item.Item.Type)); err != nil {
+				return err
+			}
+		} else {
+			if _, err := adapters.RoosterRepository.Get(ctx, item.Rooster.ID); err != nil {
+				return err
+			}
+
+			if err := adapters.RoosterRepository.Delete(ctx, item.Rooster.ID); err != nil {
+				return err
+			}
+
+			origin := fmt.Sprintf("Trade with %s", user.ID)
+			if err := adapters.RoosterRepository.Create(ctx, domain.NewRooster(otherID, item.Rooster.Type, origin)); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
+func (s *TradeService) FinishTrade(ctx context.Context, tradeID uuid.UUID) error {
+	trade, err := s.cache.Get(tradeID)
+	if err != nil {
+		return err
+	}
+
+	if !trade.Done() {
+		return errors.New("trade not done")
+	}
+
+	err = s.userTx.Transact(ctx, func(adapters port.UserTradeTxAdapters, lock func(domain.ID) error) error {
+		users := []*domain.TradeUser{}
+		for _, user := range trade.Users {
+			if err := lock(user.ID); err != nil {
+				return err
+			}
+			users = append(users, user)
+		}
+
+		firstUser, secondUser := users[0], users[1]
+		if err := s.swapUserItems(ctx, firstUser, secondUser.ID, adapters); err != nil {
+			return err
+		}
+
+		if err := s.swapUserItems(ctx, secondUser, firstUser.ID, adapters); err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+	if err == nil {
+		s.cache.Delete(tradeID)
+	}
+
+	return err
+
 }
 
 func (s *TradeService) UpdateUserStatus(ctx context.Context, dto *dto.UpdateUserStatusDTO) (*UpdateUserStatusWrapper, error) {
@@ -105,9 +179,10 @@ func (s *TradeService) UpdateItem(ctx context.Context, tradeID uuid.UUID, item *
 	return s.saveAndReturn(tradeID, trade)
 }
 
-func NewTradeService(cache port.TradeCache, userService *UserService) *TradeService {
+func NewTradeService(cache port.TradeCache, userService *UserService, userTx port.TradeTxProvider) *TradeService {
 	return &TradeService{
 		cache:       cache,
 		userService: userService,
+		userTx:      userTx,
 	}
 }

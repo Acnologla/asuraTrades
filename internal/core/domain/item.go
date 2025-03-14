@@ -31,12 +31,25 @@ type Item struct {
 	Type     ItemType
 }
 
+func (i *Item) IsTradeable() bool {
+	_, ok := tradeableItemTypes[i.Type]
+	return ok
+}
+
 func GetTradableItems(items []*Item) []*Item {
 	tradableItems := make([]*Item, 0, len(items))
 	for _, item := range items {
-		if _, ok := tradeableItemTypes[item.Type]; ok {
+		if item.IsTradeable() {
 			tradableItems = append(tradableItems, item)
 		}
 	}
 	return tradableItems
+}
+
+func NewItem(userID ID, itemID int, t ItemType) *Item {
+	return &Item{
+		UserID: userID,
+		ItemID: itemID,
+		Type:   t,
+	}
 }

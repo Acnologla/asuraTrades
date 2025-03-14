@@ -10,5 +10,14 @@ import (
 
 type UserRepository interface {
 	Get(ctx context.Context, id domain.ID) (*domain.User, error)
-	LockUpdate(ctx context.Context, userID domain.ID) (func(err error) error, error)
+}
+
+type UserTradeTxAdapters struct {
+	UserRepository    UserRepository
+	ItemRepository    ItemRepository
+	RoosterRepository RoosterRepository
+}
+
+type TradeTxProvider interface {
+	Transact(ctx context.Context, txFunc func(adapters UserTradeTxAdapters, lock func(domain.ID) error) error) error
 }
