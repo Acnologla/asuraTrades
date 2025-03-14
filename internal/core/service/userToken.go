@@ -38,7 +38,7 @@ func (s *UserTokenService) CreateToken(ctx context.Context, userTradeDto *dto.Ge
 	return s.tokenProvider.GenerateToken(userTrade, TOKEN_EXPIRATION_TIME)
 }
 
-func (s *UserTokenService) ValidateToken(token string) (*domain.UserTrade, error) {
+func (s *UserTokenService) DecodeToken(token string) (*domain.UserTrade, error) {
 	return s.tokenProvider.ValidateToken(token)
 }
 

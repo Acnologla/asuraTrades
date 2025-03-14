@@ -8,6 +8,7 @@ import (
 type TradeItemDTO struct {
 	Type   domain.TradeItemType
 	ID     uuid.UUID
+	ItemID uuid.UUID
 	User   domain.ID
 	Remove bool
 }
@@ -15,5 +16,5 @@ type TradeItemDTO struct {
 type UpdateUserStatusDTO struct {
 	ID        uuid.UUID
 	Confirmed bool
-	UserID    domain.ID
+	User      domain.ID
 }
