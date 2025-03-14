@@ -81,21 +81,11 @@ func GetOrCreateRoom(connection *websocket.Conn, tradeUser *domain.UserTrade) *T
 }
 
 func RoomMessageToTradeItemDTO(message *RoomMessage) *dto.TradeItemDTO {
-	return &dto.TradeItemDTO{
-		Type:   domain.TradeItemType(message.Data.Type),
-		ID:     message.TradeID,
-		ItemID: message.Data.ItemID,
-		User:   message.User,
-		Remove: message.Data.Remove,
-	}
+	return dto.NewTradeItemDTO(message.Data.Type, message.TradeID, message.Data.ItemID, message.User, message.Data.Remove)
 }
 
 func RoomMessageToUpdateUserStatusDTO(message *RoomMessage) *dto.UpdateUserStatusDTO {
-	return &dto.UpdateUserStatusDTO{
-		ID:        message.TradeID,
-		Confirmed: message.Data.Confirmed,
-		User:      message.User,
-	}
+	return dto.NewUpdateUserStatusDTO(message.TradeID, message.Data.Confirmed, message.User)
 }
 
 func RemoveUserFromRoom(tradeID uuid.UUID, user domain.ID) {

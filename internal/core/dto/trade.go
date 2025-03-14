@@ -18,3 +18,21 @@ type UpdateUserStatusDTO struct {
 	Confirmed bool
 	User      domain.ID
 }
+
+func NewTradeItemDTO(t int, ID, itemID uuid.UUID, user domain.ID, remove bool) *TradeItemDTO {
+	return &TradeItemDTO{
+		Type:   domain.TradeItemType(t),
+		ID:     ID,
+		ItemID: itemID,
+		User:   user,
+		Remove: remove,
+	}
+}
+
+func NewUpdateUserStatusDTO(ID uuid.UUID, confirmed bool, user domain.ID) *UpdateUserStatusDTO {
+	return &UpdateUserStatusDTO{
+		ID:        ID,
+		Confirmed: confirmed,
+		User:      user,
+	}
+}
