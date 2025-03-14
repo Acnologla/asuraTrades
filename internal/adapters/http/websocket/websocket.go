@@ -27,7 +27,7 @@ type TradeWebsocket struct {
 }
 
 func (t *TradeWebsocket) authAndDecodeToken(c *gin.Context) *domain.UserTrade {
-	token := c.Request.Header.Get("Authorization")
+	token := c.Query("token")
 	if token == "" {
 		c.String(http.StatusUnauthorized, "Unauthorized")
 		c.Abort()
