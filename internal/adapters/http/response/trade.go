@@ -19,7 +19,7 @@ type TradeResponse struct {
 	Users map[string]*TradeUserResponse `json:"users"`
 }
 
-func NewTradeResponse(trade domain.Trade) *TradeResponse {
+func NewTradeResponse(trade *domain.Trade) *TradeResponse {
 	users := make(map[string]*TradeUserResponse, len(trade.Users))
 	for id, user := range trade.Users {
 		items := make([]*TradeItemResponse, len(user.Items))
