@@ -28,7 +28,7 @@ func (s *TradeService) GetTrade(ctx context.Context, id uuid.UUID) (*domain.Trad
 
 func (s *TradeService) CreateTrade(ctx context.Context, tradeID uuid.UUID, author, other domain.ID) (*domain.Trade, error) {
 
-	if exists, err := s.cache.Get(tradeID); err == nil && exists != nil {
+	if exists, err := s.GetTrade(ctx, tradeID); err == nil && exists != nil {
 		return nil, errors.New("trade already exists")
 	}
 
@@ -40,41 +40,50 @@ func (s *TradeService) CreateTrade(ctx context.Context, tradeID uuid.UUID, autho
 	return trade, nil
 }
 
+func (s *TradeService) transferItem(ctx context.Context, item *domain.Item, newOwnerID domain.ID, repo port.ItemRepository) error {
+	if _, err := repo.Get(ctx, item.ID); err != nil {
+		return err
+	}
+
+	if err := repo.Remove(ctx, item.ID); err != nil {
+		return err
+	}
+
+	newItem := domain.NewItem(newOwnerID, item.ItemID, item.Type)
+	return repo.Add(ctx, newItem)
+}
+
+func (s *TradeService) transferRooster(ctx context.Context, rooster *domain.Rooster, newOwnerID domain.ID, currentOwnerID domain.ID, repo port.RoosterRepository) error {
+	if _, err := repo.Get(ctx, rooster.ID); err != nil {
+		return err
+	}
+
+	if err := repo.Delete(ctx, rooster.ID); err != nil {
+		return err
+	}
+
+	origin := fmt.Sprintf("Trade with %s", currentOwnerID)
+	newRooster := domain.NewRooster(newOwnerID, rooster.Type, origin)
+	return repo.Create(ctx, newRooster)
+}
+
 func (s *TradeService) swapUserItems(ctx context.Context, user *domain.TradeUser, otherID domain.ID, adapters port.UserTradeTxAdapters) error {
 	for _, item := range user.Items {
 		if item.Type == domain.ItemTradeType {
-			if _, err := adapters.ItemRepository.Get(ctx, item.Item.ID); err != nil {
-				return err
-			}
-
-			if err := adapters.ItemRepository.Remove(ctx, item.Item.ID); err != nil {
-				return err
-			}
-
-			if err := adapters.ItemRepository.Add(ctx, domain.NewItem(otherID, item.Item.ItemID, item.Item.Type)); err != nil {
+			if err := s.transferItem(ctx, item.Item, otherID, adapters.ItemRepository); err != nil {
 				return err
 			}
 		} else {
-			if _, err := adapters.RoosterRepository.Get(ctx, item.Rooster.ID); err != nil {
-				return err
-			}
-
-			if err := adapters.RoosterRepository.Delete(ctx, item.Rooster.ID); err != nil {
-				return err
-			}
-
-			origin := fmt.Sprintf("Trade with %s", user.ID)
-			if err := adapters.RoosterRepository.Create(ctx, domain.NewRooster(otherID, item.Rooster.Type, origin)); err != nil {
+			if err := s.transferRooster(ctx, item.Rooster, otherID, user.ID, adapters.RoosterRepository); err != nil {
 				return err
 			}
 		}
 	}
-
 	return nil
 }
 
 func (s *TradeService) FinishTrade(ctx context.Context, tradeID uuid.UUID) error {
-	trade, err := s.cache.Get(tradeID)
+	trade, err := s.GetTrade(ctx, tradeID)
 	if err != nil {
 		return err
 	}
@@ -113,7 +122,7 @@ func (s *TradeService) FinishTrade(ctx context.Context, tradeID uuid.UUID) error
 }
 
 func (s *TradeService) UpdateUserStatus(ctx context.Context, dto *dto.UpdateUserStatusDTO) (*UpdateUserStatusWrapper, error) {
-	trade, err := s.cache.Get(dto.ID)
+	trade, err := s.GetTrade(ctx, dto.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -133,6 +142,7 @@ func (s *TradeService) UpdateUserStatus(ctx context.Context, dto *dto.UpdateUser
 }
 
 func (s *TradeService) getUserItem(ctx context.Context, id uuid.UUID, t domain.TradeItemType) (*domain.TradeItem, error) {
+
 	if t == domain.ItemTradeType {
 		i, err := s.userService.GetItem(ctx, id)
 		if err != nil {
@@ -140,6 +150,7 @@ func (s *TradeService) getUserItem(ctx context.Context, id uuid.UUID, t domain.T
 		}
 		return domain.NewTradeItemItem(i), nil
 	}
+
 	r, err := s.userService.GetRooster(ctx, id)
 	if err != nil {
 		return nil, err
@@ -155,7 +166,7 @@ func (s *TradeService) saveAndReturn(tradeID uuid.UUID, trade *domain.Trade) (*d
 }
 
 func (s *TradeService) UpdateItem(ctx context.Context, tradeID uuid.UUID, item *dto.TradeItemDTO) (*domain.Trade, error) {
-	trade, err := s.cache.Get(tradeID)
+	trade, err := s.GetTrade(ctx, tradeID)
 	if err != nil {
 		return nil, err
 	}
