@@ -51,9 +51,16 @@ func NewUserTrade(authorID, otherID, tradeID string) (*UserTrade, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	parsedID, err := uuid.Parse(tradeID)
+
+	if err != nil {
+		return nil, err
+	}
+
 	return &UserTrade{
 		AuthorID: author,
 		OtherID:  other,
-		TradeID:  uuid.MustParse(tradeID),
+		TradeID:  parsedID,
 	}, nil
 }

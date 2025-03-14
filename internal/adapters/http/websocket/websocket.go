@@ -19,11 +19,14 @@ const PONG_INTERVAL = 60 * time.Second
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
+	CheckOrigin: func(r *http.Request) bool {
+		return true
+	},
 }
 
 type TradeWebsocket struct {
-	tokenService service.UserTokenService
-	tradeService service.TradeService
+	tokenService *service.UserTokenService
+	tradeService *service.TradeService
 }
 
 func (t *TradeWebsocket) authAndDecodeToken(c *gin.Context) *domain.UserTrade {
@@ -105,7 +108,6 @@ func (t *TradeWebsocket) initializeUser(ctx context.Context, conn *websocket.Con
 			}
 			return
 		}
-
 		message.User = user.AuthorID
 		t.processMessage(ctx, room, message)
 	}
@@ -125,16 +127,17 @@ func (t *TradeWebsocket) UpgradeConnection(c *gin.Context) {
 	room := GetOrCreateRoom(conn, tokenInfo)
 	trade, err := t.tradeService.GetTrade(c.Request.Context(), room.ID)
 	if err != nil {
-		c.String(http.StatusInternalServerError, "Error occurred while getting trade")
-		return
+		trade, err = t.tradeService.CreateTrade(c.Request.Context(), tokenInfo.TradeID, tokenInfo.AuthorID, tokenInfo.OtherID)
+		if err != nil {
+			return
+		}
 	}
-
 	conn.WriteJSON(response.NewTradeResponse(trade))
 
 	t.initializeUser(c.Request.Context(), conn, room, tokenInfo)
 }
 
-func NewTradeWebsocket(tokenService service.UserTokenService, tradeService service.TradeService) *TradeWebsocket {
+func NewTradeWebsocket(tokenService *service.UserTokenService, tradeService *service.TradeService) *TradeWebsocket {
 	return &TradeWebsocket{
 		tokenService: tokenService,
 		tradeService: tradeService,

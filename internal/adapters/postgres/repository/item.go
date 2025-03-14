@@ -17,13 +17,14 @@ func (r *ItemRepository) Get(ctx context.Context, id uuid.UUID) (*domain.Item, e
 	item := &domain.Item{}
 
 	err := r.db.QueryRow(ctx,
-		"SELECT id, userid, type FROM item WHERE id = $1",
-		id).Scan(&item.ID, &item.UserID)
+		"SELECT id, userid, type, itemID, quantity FROM item WHERE id = $1",
+		id).Scan(&item.ID, &item.UserID, &item.Type, &item.ItemID, &item.Quantity)
 
 	if err != nil {
 		return nil, err
 	}
 
+	item.Quantity = 1
 	return item, nil
 }
 
@@ -49,12 +50,12 @@ func (r *ItemRepository) GetUserItems(ctx context.Context, userID domain.ID) ([]
 	return items, nil
 }
 
-func (r *ItemRepository) Add(ctx context.Context, item *domain.Item) error {
+func (r *ItemRepository) Add(ctx context.Context, item *domain.Item, quantity int) error {
 	cmdTag, err := r.db.Exec(ctx,
 		`UPDATE item
-		SET quantity = quantity + 1 
+		SET quantity = quantity + $4 
 		WHERE userid = $1 AND itemid = $2 AND type = $3`,
-		item.UserID, item.ItemID, item.Type)
+		item.UserID, item.ItemID, item.Type, quantity)
 
 	if err != nil {
 		return err
@@ -65,7 +66,7 @@ func (r *ItemRepository) Add(ctx context.Context, item *domain.Item) error {
 		_, err = r.db.Exec(ctx,
 			`INSERT INTO item (userid, quantity, itemid, type)
 			VALUES ($1, $2, $3, $4)`,
-			item.UserID, 1, item.ItemID, item.Type)
+			item.UserID, quantity, item.ItemID, item.Type)
 
 		if err != nil {
 			return err
@@ -75,12 +76,12 @@ func (r *ItemRepository) Add(ctx context.Context, item *domain.Item) error {
 	return nil
 }
 
-func (r *ItemRepository) Remove(ctx context.Context, id uuid.UUID) error {
+func (r *ItemRepository) Remove(ctx context.Context, id uuid.UUID, quantity int) error {
 	cmdTag, err := r.db.Exec(ctx,
 		`UPDATE item 
-		SET quantity = quantity - 1 
-		WHERE id = $1 AND quantity > 1`,
-		id)
+		SET quantity = quantity - $2 
+		WHERE id = $1 AND quantity > $2`,
+		id, quantity)
 
 	if err != nil {
 		return err

@@ -68,6 +68,8 @@ func (user *TradeUser) addItem(item *TradeItem) error {
 		return errors.New("item is not tradeable")
 	}
 
+	item.Item.Quantity = 1 // We set this quantity to 1 because the user can only add one item at a time
+
 	for _, it := range user.Items {
 		if it.Type == ItemTradeType && it.Item.ID == item.Item.ID {
 			it.Item.Quantity++

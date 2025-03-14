@@ -12,6 +12,6 @@ import (
 type ItemRepository interface {
 	Get(ctx context.Context, id uuid.UUID) (*domain.Item, error)
 	GetUserItems(ctx context.Context, id domain.ID) ([]*domain.Item, error)
-	Remove(ctx context.Context, id uuid.UUID) error
-	Add(ctx context.Context, item *domain.Item) error
+	Remove(ctx context.Context, id uuid.UUID, quantity int) error
+	Add(ctx context.Context, item *domain.Item, quantity int) error
 }

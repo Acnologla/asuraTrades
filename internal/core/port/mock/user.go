@@ -14,6 +14,7 @@ import (
 	reflect "reflect"
 
 	domain "github.com/acnologla/asuraTrades/internal/core/domain"
+	port "github.com/acnologla/asuraTrades/internal/core/port"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -56,17 +57,40 @@ func (mr *MockUserRepositoryMockRecorder) Get(ctx, id any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockUserRepository)(nil).Get), ctx, id)
 }
 
-// LockUpdate mocks base method.
-func (m *MockUserRepository) LockUpdate(ctx context.Context, userID domain.ID) (func(error) error, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "LockUpdate", ctx, userID)
-	ret0, _ := ret[0].(func(error) error)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+// MockTradeTxProvider is a mock of TradeTxProvider interface.
+type MockTradeTxProvider struct {
+	ctrl     *gomock.Controller
+	recorder *MockTradeTxProviderMockRecorder
+	isgomock struct{}
 }
 
-// LockUpdate indicates an expected call of LockUpdate.
-func (mr *MockUserRepositoryMockRecorder) LockUpdate(ctx, userID any) *gomock.Call {
+// MockTradeTxProviderMockRecorder is the mock recorder for MockTradeTxProvider.
+type MockTradeTxProviderMockRecorder struct {
+	mock *MockTradeTxProvider
+}
+
+// NewMockTradeTxProvider creates a new mock instance.
+func NewMockTradeTxProvider(ctrl *gomock.Controller) *MockTradeTxProvider {
+	mock := &MockTradeTxProvider{ctrl: ctrl}
+	mock.recorder = &MockTradeTxProviderMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockTradeTxProvider) EXPECT() *MockTradeTxProviderMockRecorder {
+	return m.recorder
+}
+
+// Transact mocks base method.
+func (m *MockTradeTxProvider) Transact(ctx context.Context, txFunc func(port.UserTradeTxAdapters, func(domain.ID) error) error) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Transact", ctx, txFunc)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Transact indicates an expected call of Transact.
+func (mr *MockTradeTxProviderMockRecorder) Transact(ctx, txFunc any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LockUpdate", reflect.TypeOf((*MockUserRepository)(nil).LockUpdate), ctx, userID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Transact", reflect.TypeOf((*MockTradeTxProvider)(nil).Transact), ctx, txFunc)
 }

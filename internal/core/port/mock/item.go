@@ -43,17 +43,17 @@ func (m *MockItemRepository) EXPECT() *MockItemRepositoryMockRecorder {
 }
 
 // Add mocks base method.
-func (m *MockItemRepository) Add(ctx context.Context, item *domain.Item) error {
+func (m *MockItemRepository) Add(ctx context.Context, item *domain.Item, quantity int) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Add", ctx, item)
+	ret := m.ctrl.Call(m, "Add", ctx, item, quantity)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Add indicates an expected call of Add.
-func (mr *MockItemRepositoryMockRecorder) Add(ctx, item any) *gomock.Call {
+func (mr *MockItemRepositoryMockRecorder) Add(ctx, item, quantity any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Add", reflect.TypeOf((*MockItemRepository)(nil).Add), ctx, item)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Add", reflect.TypeOf((*MockItemRepository)(nil).Add), ctx, item, quantity)
 }
 
 // Get mocks base method.
@@ -87,15 +87,15 @@ func (mr *MockItemRepositoryMockRecorder) GetUserItems(ctx, id any) *gomock.Call
 }
 
 // Remove mocks base method.
-func (m *MockItemRepository) Remove(ctx context.Context, id uuid.UUID) error {
+func (m *MockItemRepository) Remove(ctx context.Context, id uuid.UUID, quantity int) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Remove", ctx, id)
+	ret := m.ctrl.Call(m, "Remove", ctx, id, quantity)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Remove indicates an expected call of Remove.
-func (mr *MockItemRepositoryMockRecorder) Remove(ctx, id any) *gomock.Call {
+func (mr *MockItemRepositoryMockRecorder) Remove(ctx, id, quantity any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Remove", reflect.TypeOf((*MockItemRepository)(nil).Remove), ctx, id)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Remove", reflect.TypeOf((*MockItemRepository)(nil).Remove), ctx, id, quantity)
 }

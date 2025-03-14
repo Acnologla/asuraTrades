@@ -52,16 +52,21 @@ func (s *TradeService) CreateTrade(ctx context.Context, tradeID uuid.UUID, autho
 }
 
 func (s *TradeService) transferItem(ctx context.Context, request *ItemTransferRequest, repo port.ItemRepository) error {
-	if _, err := repo.Get(ctx, request.Item.ID); err != nil {
+	i, err := repo.Get(ctx, request.Item.ID)
+	if err != nil {
 		return err
 	}
 
-	if err := repo.Remove(ctx, request.Item.ID); err != nil {
+	if i.Quantity < request.Item.Quantity {
+		return errors.New("not enough items")
+	}
+
+	if err := repo.Remove(ctx, request.Item.ID, request.Item.Quantity); err != nil {
 		return err
 	}
 
 	newItem := domain.NewItem(request.NewOwnerID, request.Item.ItemID, request.Item.Type)
-	return repo.Add(ctx, newItem)
+	return repo.Add(ctx, newItem, request.Item.Quantity)
 }
 
 func (s *TradeService) transferRooster(ctx context.Context, request *RoosterTransferRequest, repo port.RoosterRepository) error {
