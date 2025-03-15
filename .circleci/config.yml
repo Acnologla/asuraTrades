@@ -1,0 +1,32 @@
+version: 2.1
+jobs:
+  Unit-test:
+    docker:
+      - image: "cimg/go:1.24.0"
+    steps:
+      - checkout
+      - run:
+          name: Unit test
+          command: go test ./...
+  Build-and-deploy:
+    docker:
+      - image: jdrouet/docker-with-buildx:stable
+    steps:
+      - checkout
+      - setup_remote_docker
+      - run: docker run --privileged --rm tonistiigi/binfmt --install all
+      - run:
+          name: Docker build and deploy
+          command: |
+            echo "$GITLABPASSWORD" | docker login registry.gitlab.com --username acnologla --password-stdin
+            docker buildx build --platform linux/arm64/v8 --tag registry.gitlab.com/acnologla/asuratrade --push .
+
+workflows:
+  version: 2
+  test_and_build:
+    jobs:
+      - Unit-test
+      - Build-and-deploy:
+          filters:
+            branches:
+              only: main
