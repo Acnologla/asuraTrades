@@ -3,6 +3,7 @@ package websocket
 import (
 	"context"
 	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/acnologla/asuraTrades/internal/adapters/http/response"
@@ -16,17 +17,30 @@ import (
 const PING_INTERVAL = 30 * time.Second
 const PONG_INTERVAL = 60 * time.Second
 
-var upgrader = websocket.Upgrader{
-	ReadBufferSize:  1024,
-	WriteBufferSize: 1024,
-	CheckOrigin: func(r *http.Request) bool {
-		return true
-	},
+type TradeWebsocket struct {
+	tokenService     *service.UserTokenService
+	tradeService     *service.TradeService
+	productionDomain string
+	production       bool
 }
 
-type TradeWebsocket struct {
-	tokenService *service.UserTokenService
-	tradeService *service.TradeService
+func (t *TradeWebsocket) getUpgrader() *websocket.Upgrader {
+	return &websocket.Upgrader{
+		ReadBufferSize:  1024,
+		WriteBufferSize: 1024,
+		CheckOrigin: func(r *http.Request) bool {
+			if !t.production {
+				return true
+			}
+			origin := r.Header.Get("Origin")
+			originURL, err := url.Parse(origin)
+			if err != nil {
+				return false
+			}
+
+			return originURL.Host == t.productionDomain
+		},
+	}
 }
 
 func (t *TradeWebsocket) authAndDecodeToken(c *gin.Context) *domain.UserTrade {
@@ -147,7 +161,7 @@ func (t *TradeWebsocket) UpgradeConnection(c *gin.Context) {
 	if tokenInfo == nil {
 		return
 	}
-	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
+	conn, err := t.getUpgrader().Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
 		c.String(http.StatusInternalServerError, "Error occurred while upgrading connection")
 		return
@@ -166,7 +180,7 @@ func (t *TradeWebsocket) UpgradeConnection(c *gin.Context) {
 	t.initializeUser(c.Request.Context(), conn, room, tokenInfo)
 }
 
-func NewTradeWebsocket(tokenService *service.UserTokenService, tradeService *service.TradeService) *TradeWebsocket {
+func NewTradeWebsocket(tokenService *service.UserTokenService, tradeService *service.TradeService, prooduction bool, productionURl string) *TradeWebsocket {
 	return &TradeWebsocket{
 		tokenService: tokenService,
 		tradeService: tradeService,

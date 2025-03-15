@@ -18,6 +18,7 @@ type (
 	HTTPConfig struct {
 		Port                  string
 		GenerateTokenPassword string
+		ProductionURL         string
 	}
 
 	Config struct {
@@ -46,6 +47,7 @@ func LoadConfig() (*Config, error) {
 	httpConfig := HTTPConfig{
 		GenerateTokenPassword: os.Getenv("GENERATE_TOKEN_PASSWORD"),
 		Port:                  os.Getenv("PORT"),
+		ProductionURL:         os.Getenv("PRODUCTION_URL"),
 	}
 
 	return &Config{

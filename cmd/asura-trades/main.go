@@ -41,7 +41,7 @@ func main() {
 
 	// initialize controllers
 	userTokenController := controllers.NewUserTokenController(config.HTTPConfig.GenerateTokenPassword, userTokenService)
-	websocketController := websocket.NewTradeWebsocket(userTokenService, tradeService)
+	websocketController := websocket.NewTradeWebsocket(userTokenService, tradeService, config.Production, config.HTTPConfig.ProductionURL)
 
 	// initialize the http server
 
