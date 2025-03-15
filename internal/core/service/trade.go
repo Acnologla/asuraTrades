@@ -99,7 +99,7 @@ func (s *TradeService) swapUserItems(ctx context.Context, user *domain.TradeUser
 	return nil
 }
 
-func (s *TradeService) FinishTrade(ctx context.Context, tradeID uuid.UUID) error {
+func (s *TradeService) finishTrade(ctx context.Context, tradeID uuid.UUID) error {
 	trade, err := s.GetTrade(ctx, tradeID)
 	if err != nil {
 		return err
@@ -155,7 +155,7 @@ func (s *TradeService) ConfirmTrade(ctx context.Context, tradeID uuid.UUID, call
 		defer ticker.Stop()
 		select {
 		case <-ticker.C:
-			err := s.FinishTrade(ctx, tradeID)
+			err := s.finishTrade(ctx, tradeID)
 			callback(err == nil, err)
 		case <-ctx.Done():
 			callback(false, nil)

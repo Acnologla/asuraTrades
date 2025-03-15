@@ -12,58 +12,58 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-type RoomMessageType int
+type roomMessageType int
 
 const (
-	_ RoomMessageType = iota
+	_ roomMessageType = iota
 	UpdateItem
 	UpdateUserStatus
 )
 
-type RoomMessageData struct {
+type roomMessageData struct {
 	ItemID    uuid.UUID `json:"item_id"`
 	Remove    bool      `json:"remove"`
 	Confirmed bool      `json:"confirmed"`
 	Type      int       `json:"type"`
 }
 
-type RoomMessage struct {
-	Type    RoomMessageType `json:"type"`
+type roomMessage struct {
+	Type    roomMessageType `json:"type"`
 	TradeID uuid.UUID       `json:"trade_id"`
 	User    domain.ID       `json:"user"`
-	Data    RoomMessageData `json:"data"`
+	Data    roomMessageData `json:"data"`
 }
 
-type TradeRoom struct {
+type tradeRoom struct {
 	ID uuid.UUID
 	sync.RWMutex
 	users  map[domain.ID]*websocket.Conn
 	Cancel context.CancelFunc
 }
 
-func (t *TradeRoom) AddUser(user *domain.UserTrade, connection *websocket.Conn) {
+func (t *tradeRoom) addUser(user *domain.UserTrade, connection *websocket.Conn) {
 	t.users[user.AuthorID] = connection
 }
 
-func (t *TradeRoom) RemoveUser(user domain.ID) {
+func (t *tradeRoom) removeUser(user domain.ID) {
 	delete(t.users, user)
 }
 
-func (t *TradeRoom) Broadcast(v any) {
+func (t *tradeRoom) broadcast(v any) {
 	for user, conn := range t.users {
 		if err := conn.WriteJSON(v); err != nil {
-			t.RemoveUser(user)
+			t.removeUser(user)
 		}
 	}
 }
 
-func (t *TradeRoom) UpdateTrade(trade *domain.Trade) {
+func (t *tradeRoom) updateTrade(trade *domain.Trade) {
 	tradeResponse := response.NewTradeResponse(trade)
-	t.Broadcast(tradeResponse)
+	t.broadcast(tradeResponse)
 }
 
-func NewTradeRoom(connection *websocket.Conn, tradeUser *domain.UserTrade) *TradeRoom {
-	return &TradeRoom{
+func newTradeRoom(connection *websocket.Conn, tradeUser *domain.UserTrade) *tradeRoom {
+	return &tradeRoom{
 		ID: tradeUser.TradeID,
 		users: map[domain.ID]*websocket.Conn{
 			tradeUser.AuthorID: connection,
@@ -71,33 +71,33 @@ func NewTradeRoom(connection *websocket.Conn, tradeUser *domain.UserTrade) *Trad
 	}
 }
 
-var rooms = make(map[uuid.UUID]*TradeRoom)
+var rooms = make(map[uuid.UUID]*tradeRoom)
 
-func GetOrCreateRoom(connection *websocket.Conn, tradeUser *domain.UserTrade) *TradeRoom {
+func getOrCreateRoom(connection *websocket.Conn, tradeUser *domain.UserTrade) *tradeRoom {
 	if room, ok := rooms[tradeUser.TradeID]; ok {
 		room.Lock()
 		defer room.Unlock()
-		room.AddUser(tradeUser, connection)
+		room.addUser(tradeUser, connection)
 		return room
 	}
 
-	room := NewTradeRoom(connection, tradeUser)
+	room := newTradeRoom(connection, tradeUser)
 	rooms[tradeUser.TradeID] = room
 	return room
 }
 
-func RoomMessageToTradeItemDTO(message *RoomMessage) *dto.TradeItemDTO {
+func roomMessageToTradeItemDTO(message *roomMessage) *dto.TradeItemDTO {
 	return dto.NewTradeItemDTO(message.Data.Type, message.TradeID, message.Data.ItemID, message.User, message.Data.Remove)
 }
 
-func RoomMessageToUpdateUserStatusDTO(message *RoomMessage) *dto.UpdateUserStatusDTO {
+func roomMessageToUpdateUserStatusDTO(message *roomMessage) *dto.UpdateUserStatusDTO {
 	return dto.NewUpdateUserStatusDTO(message.TradeID, message.Data.Confirmed, message.User)
 }
 
-func RemoveUserFromRoom(tradeID uuid.UUID, user domain.ID) {
+func removeUserFromRoom(tradeID uuid.UUID, user domain.ID) {
 	if room, ok := rooms[tradeID]; ok {
 		room.Lock()
-		room.RemoveUser(user)
+		room.removeUser(user)
 		room.Unlock()
 		if len(room.users) == 0 {
 			delete(rooms, tradeID)
@@ -105,7 +105,7 @@ func RemoveUserFromRoom(tradeID uuid.UUID, user domain.ID) {
 	}
 }
 
-func validateRoomMessage(message *RoomMessage) error {
+func validateRoomMessage(message *roomMessage) error {
 	if message.Type != UpdateItem && message.Type != UpdateUserStatus {
 		return errors.New("invalid message type")
 	}
