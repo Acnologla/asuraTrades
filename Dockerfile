@@ -5,7 +5,7 @@ COPY go.mod .
 RUN go mod tidy
 
 COPY . .
-RUN env GOOS=linux GOARCH=arm64 go build -mod=mod -o main ./cmd/cdn/main.go
+RUN env GOOS=linux GOARCH=arm64 go build -mod=mod -o main ./cmd/asura-trades/main.go
 
 FROM alpine
 
