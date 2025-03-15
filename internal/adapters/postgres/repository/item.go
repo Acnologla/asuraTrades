@@ -24,7 +24,6 @@ func (r *ItemRepository) Get(ctx context.Context, id uuid.UUID) (*domain.Item, e
 		return nil, err
 	}
 
-	item.Quantity = 1
 	return item, nil
 }
 

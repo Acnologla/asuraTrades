@@ -6,6 +6,8 @@ import (
 	"github.com/google/uuid"
 )
 
+const MAXIMUM_TRADE_ITEMS = 12
+
 type TradeItemType int
 
 const (
@@ -50,6 +52,15 @@ type TradeUser struct {
 	Confirmed bool
 }
 
+func (user *TradeUser) appendItem(item *TradeItem) error {
+	if len(user.Items) >= MAXIMUM_TRADE_ITEMS {
+		return errors.New("maximum trade items exceeded")
+	}
+
+	user.Items = append(user.Items, item)
+	return nil
+}
+
 func (user *TradeUser) addRoster(item *TradeItem) error {
 	if !item.Rooster.IsTradeable() {
 		return errors.New("rooster is not tradeable")
@@ -59,8 +70,7 @@ func (user *TradeUser) addRoster(item *TradeItem) error {
 			return errors.New("rooster already added")
 		}
 	}
-	user.Items = append(user.Items, item)
-	return nil
+	return user.appendItem(item)
 }
 
 func (user *TradeUser) addItem(item *TradeItem) error {
@@ -68,16 +78,19 @@ func (user *TradeUser) addItem(item *TradeItem) error {
 		return errors.New("item is not tradeable")
 	}
 
-	item.Item.Quantity = 1 // We set this quantity to 1 because the user can only add one item at a time
-
 	for _, it := range user.Items {
 		if it.Type == ItemTradeType && it.Item.ID == item.Item.ID {
+			if it.Item.Quantity+1 > item.Item.Quantity {
+				return errors.New("item quantity exceeded")
+			}
 			it.Item.Quantity++
 			return nil
 		}
 	}
-	user.Items = append(user.Items, item)
-	return nil
+
+	item.Item.Quantity = 1 // We set this quantity to 1 because the user can only add one item at a time
+
+	return user.appendItem(item)
 }
 
 type Trade struct {
@@ -117,25 +130,42 @@ func (t *Trade) Done() bool {
 	return true
 }
 
-func (t *Trade) RemoveItem(userID ID, itemID uuid.UUID) error {
-	user, ok := t.Users[userID]
-	if !ok {
-		return errors.New("user not found")
-	}
-
+func (t *Trade) removeItem(user *TradeUser, itemID uuid.UUID) error {
 	for i, item := range user.Items {
 		if item.Type == ItemTradeType && item.Item.ID == itemID {
 			if item.Item.Quantity > 1 {
 				item.Item.Quantity--
 				return nil
 			}
-
 			user.Items = append(user.Items[:i], user.Items[i+1:]...)
 			return nil
 		}
 	}
 
 	return errors.New("item not found")
+}
+
+func (t *Trade) removeRooster(user *TradeUser, itemID uuid.UUID) error {
+	for i, item := range user.Items {
+		if item.Type == RoosterTradeType && item.Rooster.ID == itemID {
+			user.Items = append(user.Items[:i], user.Items[i+1:]...)
+			return nil
+		}
+	}
+	return errors.New("rooster not found")
+}
+
+func (t *Trade) RemoveItem(userID ID, itemID uuid.UUID, itemType TradeItemType) error {
+	user, ok := t.Users[userID]
+
+	if !ok {
+		return errors.New("user not found")
+	}
+
+	if itemType == RoosterTradeType {
+		return t.removeRooster(user, itemID)
+	}
+	return t.removeItem(user, itemID)
 }
 
 func NewTrade(id uuid.UUID, author, other ID) *Trade {

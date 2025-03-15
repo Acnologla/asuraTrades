@@ -1,6 +1,7 @@
 package websocket
 
 import (
+	"context"
 	"errors"
 	"sync"
 
@@ -36,7 +37,8 @@ type RoomMessage struct {
 type TradeRoom struct {
 	ID uuid.UUID
 	sync.RWMutex
-	users map[domain.ID]*websocket.Conn
+	users  map[domain.ID]*websocket.Conn
+	Cancel context.CancelFunc
 }
 
 func (t *TradeRoom) AddUser(user *domain.UserTrade, connection *websocket.Conn) {
@@ -47,13 +49,17 @@ func (t *TradeRoom) RemoveUser(user domain.ID) {
 	delete(t.users, user)
 }
 
-func (t *TradeRoom) Broadcast(trade *domain.Trade) {
-	tradeResponse := response.NewTradeResponse(trade)
+func (t *TradeRoom) Broadcast(v any) {
 	for user, conn := range t.users {
-		if err := conn.WriteJSON(tradeResponse); err != nil {
+		if err := conn.WriteJSON(v); err != nil {
 			t.RemoveUser(user)
 		}
 	}
+}
+
+func (t *TradeRoom) UpdateTrade(trade *domain.Trade) {
+	tradeResponse := response.NewTradeResponse(trade)
+	t.Broadcast(tradeResponse)
 }
 
 func NewTradeRoom(connection *websocket.Conn, tradeUser *domain.UserTrade) *TradeRoom {

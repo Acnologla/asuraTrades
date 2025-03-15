@@ -47,6 +47,26 @@ func (t *TradeWebsocket) authAndDecodeToken(c *gin.Context) *domain.UserTrade {
 	return trade
 }
 
+func (t *TradeWebsocket) confirmTrade(ctx context.Context, room *TradeRoom) {
+	context, fn := context.WithCancel(ctx)
+	room.Cancel = fn
+	countdownTime, err := t.tradeService.ConfirmTrade(context, room.ID, func(b bool, err error) {
+		if b {
+			room.Broadcast(response.NewTradeConfirmedResponse(room.ID))
+			for _, conn := range room.users {
+				conn.Close()
+			}
+		}
+	})
+
+	if err != nil {
+		room.Cancel = nil
+		return
+	}
+
+	room.Broadcast(response.NewStartCountdownResponse(room.ID, countdownTime))
+}
+
 func (t *TradeWebsocket) processMessage(ctx context.Context, room *TradeRoom, message *RoomMessage) {
 	room.Lock()
 	defer room.Unlock()
@@ -59,13 +79,22 @@ func (t *TradeWebsocket) processMessage(ctx context.Context, room *TradeRoom, me
 	if message.Type == UpdateItem {
 		UpdateItemDTO := RoomMessageToTradeItemDTO(message)
 		if trade, err := t.tradeService.UpdateItem(ctx, UpdateItemDTO); err == nil {
-			room.Broadcast(trade)
+			room.UpdateTrade(trade)
 		}
 	}
 	if message.Type == UpdateUserStatus {
 		UpdateUserStatusDTO := RoomMessageToUpdateUserStatusDTO(message)
 		if r, err := t.tradeService.UpdateUserStatus(ctx, UpdateUserStatusDTO); err == nil {
-			room.Broadcast(r.Trade)
+			room.UpdateTrade(r.Trade)
+
+			if room.Cancel != nil {
+				room.Cancel()
+				room.Cancel = nil
+			}
+
+			if r.Done {
+				t.confirmTrade(ctx, room)
+			}
 		}
 	}
 

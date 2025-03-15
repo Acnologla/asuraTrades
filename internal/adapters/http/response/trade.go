@@ -1,6 +1,9 @@
 package response
 
-import "github.com/acnologla/asuraTrades/internal/core/domain"
+import (
+	"github.com/acnologla/asuraTrades/internal/core/domain"
+	"github.com/google/uuid"
+)
 
 type TradeItemResponse struct {
 	Type string `json:"type"`
@@ -54,5 +57,31 @@ func NewTradeResponse(trade *domain.Trade) *TradeResponse {
 		Type:  "trade_update",
 		ID:    trade.ID.String(),
 		Users: users,
+	}
+}
+
+type TradeConfirmedResponse struct {
+	ID   string `json:"id"`
+	Type string `json:"type"`
+}
+
+func NewTradeConfirmedResponse(tradeID uuid.UUID) *TradeConfirmedResponse {
+	return &TradeConfirmedResponse{
+		Type: "trade_confirmed",
+		ID:   tradeID.String(),
+	}
+}
+
+type StartCountdownResponse struct {
+	Type      string `json:"type"`
+	TradeID   string `json:"trade_id"`
+	Countdown int    `json:"countdown"`
+}
+
+func NewStartCountdownResponse(tradeID uuid.UUID, countdown int) *StartCountdownResponse {
+	return &StartCountdownResponse{
+		Type:      "start_countdown",
+		TradeID:   tradeID.String(),
+		Countdown: countdown,
 	}
 }

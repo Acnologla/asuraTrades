@@ -18,7 +18,7 @@ type GetTradeTokenResponseWrapper struct {
 	UserProfile *domain.UserProfile
 }
 
-const TOKEN_EXPIRATION_TIME = 20
+const TOKEN_EXPIRATION_TIME = 25
 
 func (s *UserTokenService) CreateToken(ctx context.Context, userTradeDto *dto.GenerateUserTokenDTO) (string, error) {
 	userTrade, err := domain.NewUserTrade(userTradeDto.AuthorID, userTradeDto.OtherID, userTradeDto.TradeID)

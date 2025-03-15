@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/acnologla/asuraTrades/internal/core/domain"
 	"github.com/acnologla/asuraTrades/internal/core/dto"
@@ -137,6 +138,34 @@ func (s *TradeService) FinishTrade(ctx context.Context, tradeID uuid.UUID) error
 
 }
 
+const COUNTDOWN_SECONDS = 5
+
+func (s *TradeService) ConfirmTrade(ctx context.Context, tradeID uuid.UUID, callback func(bool, error)) (int, error) {
+	trade, err := s.GetTrade(ctx, tradeID)
+	if err != nil {
+		return 0, err
+	}
+
+	if !trade.Done() {
+		return 0, errors.New("trade not done")
+	}
+
+	go func() {
+		ticker := time.NewTicker(COUNTDOWN_SECONDS * time.Second)
+		defer ticker.Stop()
+		select {
+		case <-ticker.C:
+			err := s.FinishTrade(ctx, tradeID)
+			callback(err == nil, err)
+		case <-ctx.Done():
+			callback(false, nil)
+			return
+		}
+	}()
+
+	return COUNTDOWN_SECONDS, nil
+}
+
 func (s *TradeService) UpdateUserStatus(ctx context.Context, dto *dto.UpdateUserStatusDTO) (*UpdateUserStatusWrapper, error) {
 	trade, err := s.GetTrade(ctx, dto.ID)
 	if err != nil {
@@ -187,8 +216,12 @@ func (s *TradeService) UpdateItem(ctx context.Context, dto *dto.TradeItemDTO) (*
 		return nil, err
 	}
 
+	if trade.Users[dto.User].Confirmed {
+		return nil, errors.New("user already confirmed")
+	}
+
 	if dto.Remove {
-		if err := trade.RemoveItem(dto.User, dto.ItemID); err != nil {
+		if err := trade.RemoveItem(dto.User, dto.ItemID, dto.Type); err != nil {
 			return nil, err
 		}
 		return s.saveAndReturn(dto.ID, trade)
