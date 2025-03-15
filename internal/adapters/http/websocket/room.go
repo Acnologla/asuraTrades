@@ -35,10 +35,10 @@ type roomMessage struct {
 }
 
 type tradeRoom struct {
-	ID uuid.UUID
+	id uuid.UUID
 	sync.RWMutex
 	users  map[domain.ID]*websocket.Conn
-	Cancel context.CancelFunc
+	cancel context.CancelFunc
 }
 
 func (t *tradeRoom) addUser(user *domain.UserTrade, connection *websocket.Conn) {
@@ -64,7 +64,7 @@ func (t *tradeRoom) updateTrade(trade *domain.Trade) {
 
 func newTradeRoom(connection *websocket.Conn, tradeUser *domain.UserTrade) *tradeRoom {
 	return &tradeRoom{
-		ID: tradeUser.TradeID,
+		id: tradeUser.TradeID,
 		users: map[domain.ID]*websocket.Conn{
 			tradeUser.AuthorID: connection,
 		},

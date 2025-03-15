@@ -1,6 +1,7 @@
 package service_test
 
 import (
+	"context"
 	"errors"
 	"testing"
 	"time"
@@ -23,16 +24,44 @@ func generateSnowflakeLikeID() domain.ID {
 	return domain.ID(snowflakeID)
 }
 
-func TestGetTradeTokenResponse(t *testing.T) {
+type TestSuite struct {
+	ctrl          *gomock.Controller
+	ctx           context.Context
+	tokenProvider *mock.MockTokenProvider
+	userRepo      *mock.MockUserRepository
+	itemRepo      *mock.MockItemRepository
+	roosterRepo   *mock.MockRoosterRepository
+	userService   *service.UserService
+	tokenService  *service.UserTokenService
+}
+
+func SetupTest(t *testing.T) *TestSuite {
 	ctrl := gomock.NewController(t)
 	ctx := t.Context()
-	defer ctrl.Finish()
 
 	mockTokenProvider := mock.NewMockTokenProvider(ctrl)
 	mockUserRepo := mock.NewMockUserRepository(ctrl)
 	mockItemRepo := mock.NewMockItemRepository(ctrl)
 	mockRoosterRepo := mock.NewMockRoosterRepository(ctrl)
+
 	userService := service.NewUserService(mockUserRepo, mockRoosterRepo, mockItemRepo)
+	tokenService := service.NewUserTokenService(mockTokenProvider, userService)
+
+	return &TestSuite{
+		ctrl:          ctrl,
+		ctx:           ctx,
+		tokenProvider: mockTokenProvider,
+		userRepo:      mockUserRepo,
+		itemRepo:      mockItemRepo,
+		roosterRepo:   mockRoosterRepo,
+		userService:   userService,
+		tokenService:  tokenService,
+	}
+}
+
+func TestGetTradeTokenResponse(t *testing.T) {
+	suite := SetupTest(t)
+	defer suite.ctrl.Finish()
 
 	somerandomID := generateSnowflakeLikeID()
 	somerandomID2 := generateSnowflakeLikeID()
@@ -45,8 +74,11 @@ func TestGetTradeTokenResponse(t *testing.T) {
 	}
 
 	fakeItem := &domain.Item{
-		ID: uuid.New(),
+		ID:   uuid.New(),
+		Type: 2,
 	}
+
+	fakeToken := gofakeit.UUID()
 
 	response := &service.GetTradeTokenResponseWrapper{
 		UserTrade: trade,
@@ -59,7 +91,6 @@ func TestGetTradeTokenResponse(t *testing.T) {
 		},
 	}
 
-	fakeToken := gofakeit.UUID()
 	testCases := []struct {
 		name     string
 		mockFunc func()
@@ -69,7 +100,7 @@ func TestGetTradeTokenResponse(t *testing.T) {
 		{
 			name: "Invalid Token",
 			mockFunc: func() {
-				mockTokenProvider.EXPECT().ValidateToken(gomock.Any()).Return(nil, errors.New("Invalid token"))
+				suite.tokenProvider.EXPECT().ValidateToken(gomock.Any()).Return(nil, errors.New("Invalid token"))
 			},
 			res: nil,
 			err: errors.New("Invalid token"),
@@ -77,9 +108,8 @@ func TestGetTradeTokenResponse(t *testing.T) {
 		{
 			name: "Invalid User",
 			mockFunc: func() {
-				mockTokenProvider.EXPECT().ValidateToken(gomock.Any()).Return(trade, nil)
-
-				mockUserRepo.EXPECT().Get(gomock.Any(), gomock.Any()).Return(nil, errors.New("Invalid user"))
+				suite.tokenProvider.EXPECT().ValidateToken(gomock.Any()).Return(trade, nil)
+				suite.userRepo.EXPECT().Get(gomock.Any(), gomock.Any()).Return(nil, errors.New("Invalid user"))
 			},
 			res: nil,
 			err: errors.New("Invalid user"),
@@ -87,11 +117,11 @@ func TestGetTradeTokenResponse(t *testing.T) {
 		{
 			name: "Invalid items",
 			mockFunc: func() {
-				mockTokenProvider.EXPECT().ValidateToken(gomock.Any()).Return(trade, nil)
-				mockUserRepo.EXPECT().Get(gomock.Any(), gomock.Any()).Return(&domain.User{
+				suite.tokenProvider.EXPECT().ValidateToken(gomock.Any()).Return(trade, nil)
+				suite.userRepo.EXPECT().Get(gomock.Any(), gomock.Any()).Return(&domain.User{
 					ID: somerandomID,
 				}, nil)
-				mockItemRepo.EXPECT().GetUserItems(gomock.Any(), somerandomID).Return([]*domain.Item{}, errors.New("invalid items"))
+				suite.itemRepo.EXPECT().GetUserItems(gomock.Any(), somerandomID).Return([]*domain.Item{}, errors.New("invalid items"))
 			},
 			res: nil,
 			err: errors.New("invalid items"),
@@ -99,59 +129,45 @@ func TestGetTradeTokenResponse(t *testing.T) {
 		{
 			name: "Invalid roosters",
 			mockFunc: func() {
-				mockTokenProvider.EXPECT().ValidateToken(gomock.Any()).Return(trade, nil)
-				mockUserRepo.EXPECT().Get(gomock.Any(), gomock.Any()).Return(&domain.User{
+				suite.tokenProvider.EXPECT().ValidateToken(gomock.Any()).Return(trade, nil)
+				suite.userRepo.EXPECT().Get(gomock.Any(), gomock.Any()).Return(&domain.User{
 					ID: somerandomID,
 				}, nil)
-				mockItemRepo.EXPECT().GetUserItems(gomock.Any(), somerandomID).Return([]*domain.Item{}, nil)
-				mockRoosterRepo.EXPECT().GetUserRoosters(gomock.Any(), somerandomID).Return([]*domain.Rooster{}, errors.New("invalid roosters"))
-
+				suite.itemRepo.EXPECT().GetUserItems(gomock.Any(), somerandomID).Return([]*domain.Item{}, nil)
+				suite.roosterRepo.EXPECT().GetUserRoosters(gomock.Any(), somerandomID).Return([]*domain.Rooster{}, errors.New("invalid roosters"))
 			},
 			res: nil,
 			err: errors.New("invalid roosters"),
 		},
 		{
-
 			name: "Success",
 			mockFunc: func() {
-				mockTokenProvider.EXPECT().ValidateToken(gomock.Any()).Return(trade, nil)
-				mockUserRepo.EXPECT().Get(gomock.Any(), gomock.Any()).Return(&domain.User{
+				suite.tokenProvider.EXPECT().ValidateToken(gomock.Any()).Return(trade, nil)
+				suite.userRepo.EXPECT().Get(gomock.Any(), gomock.Any()).Return(&domain.User{
 					ID: somerandomID,
 				}, nil)
-
-				mockItemRepo.EXPECT().GetUserItems(gomock.Any(), somerandomID).Return(response.UserProfile.Items, nil)
-				mockRoosterRepo.EXPECT().GetUserRoosters(gomock.Any(), somerandomID).Return(response.UserProfile.Roosters, nil)
-
+				suite.itemRepo.EXPECT().GetUserItems(gomock.Any(), somerandomID).Return(response.UserProfile.Items, nil)
+				suite.roosterRepo.EXPECT().GetUserRoosters(gomock.Any(), somerandomID).Return(response.UserProfile.Roosters, nil)
 			},
 			res: response,
 			err: nil,
 		},
 	}
 
-	service := service.NewUserTokenService(mockTokenProvider, userService)
-
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			tc.mockFunc()
-			res, err := service.GetTradeTokenResponse(ctx, fakeToken)
-			assert.Equal(t, tc.res, res)
+			res, err := suite.tokenService.GetTradeTokenResponse(suite.ctx, fakeToken)
 			assert.Equal(t, tc.err, err)
+			assert.Equal(t, tc.res, res)
 		})
-
 	}
 }
 
 func TestCreateToken(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	ctx := t.Context()
-	defer ctrl.Finish()
+	suite := SetupTest(t)
+	defer suite.ctrl.Finish()
 
-	mockTokenProvider := mock.NewMockTokenProvider(ctrl)
-	mockUserRepo := mock.NewMockUserRepository(ctrl)
-	mockItemRepo := mock.NewMockItemRepository(ctrl)
-	mockRoosterRepo := mock.NewMockRoosterRepository(ctrl)
-
-	userService := service.NewUserService(mockUserRepo, mockRoosterRepo, mockItemRepo)
 	somerandomID := generateSnowflakeLikeID()
 	somerandomID2 := generateSnowflakeLikeID()
 	dto := &dto.GenerateUserTokenDTO{
@@ -160,6 +176,7 @@ func TestCreateToken(t *testing.T) {
 		TradeID:  gofakeit.UUID(),
 	}
 	fakeToken := gofakeit.UUID()
+
 	testCases := []struct {
 		name     string
 		mockFunc func()
@@ -169,11 +186,11 @@ func TestCreateToken(t *testing.T) {
 		{
 			name: "Invalid Token",
 			mockFunc: func() {
-				mockUserRepo.EXPECT().Get(gomock.Any(), gomock.Any()).DoAndReturn(func(x any, id domain.ID) (*domain.User, error) {
+				suite.userRepo.EXPECT().Get(gomock.Any(), gomock.Any()).DoAndReturn(func(x any, id domain.ID) (*domain.User, error) {
 					return &domain.User{}, nil
 				}).Times(2)
 
-				mockTokenProvider.EXPECT().GenerateToken(gomock.Any(), gomock.Any()).Return("", errors.New("Invalid token"))
+				suite.tokenProvider.EXPECT().GenerateToken(gomock.Any(), gomock.Any()).Return("", errors.New("Invalid token"))
 			},
 			token: "",
 			err:   errors.New("Invalid token"),
@@ -181,38 +198,34 @@ func TestCreateToken(t *testing.T) {
 		{
 			name: "Invalid User",
 			mockFunc: func() {
-				mockUserRepo.EXPECT().Get(gomock.Any(), gomock.Any()).Return(nil, errors.New("Invalid user"))
+				suite.userRepo.EXPECT().Get(gomock.Any(), gomock.Any()).Return(nil, errors.New("Invalid user"))
 			},
 			token: "",
 			err:   errors.New("Invalid user"),
 		},
 		{
-
 			name: "Success",
 			mockFunc: func() {
-				mockUserRepo.EXPECT().Get(gomock.Any(), gomock.AnyOf(somerandomID, somerandomID2)).DoAndReturn(func(x any, id domain.ID) (*domain.User, error) {
+				suite.userRepo.EXPECT().Get(gomock.Any(), gomock.AnyOf(somerandomID, somerandomID2)).DoAndReturn(func(x any, id domain.ID) (*domain.User, error) {
 					return &domain.User{
 						ID: id,
 					}, nil
 				}).Times(2)
 				userTrade, _ := domain.NewUserTrade(dto.AuthorID, dto.OtherID, dto.TradeID)
 
-				mockTokenProvider.EXPECT().GenerateToken(userTrade, gomock.Any()).Return(fakeToken, nil)
+				suite.tokenProvider.EXPECT().GenerateToken(userTrade, gomock.Any()).Return(fakeToken, nil)
 			},
 			token: fakeToken,
 			err:   nil,
 		},
 	}
 
-	service := service.NewUserTokenService(mockTokenProvider, userService)
-
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			tc.mockFunc()
-			token, err := service.CreateToken(ctx, dto)
+			token, err := suite.tokenService.CreateToken(suite.ctx, dto)
 			assert.Equal(t, tc.token, token)
 			assert.Equal(t, tc.err, err)
 		})
-
 	}
 }
