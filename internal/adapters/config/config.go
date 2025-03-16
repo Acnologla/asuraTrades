@@ -47,7 +47,7 @@ func LoadConfig() (*Config, error) {
 	httpConfig := HTTPConfig{
 		GenerateTokenPassword: os.Getenv("GENERATE_TOKEN_PASSWORD"),
 		Port:                  os.Getenv("PORT"),
-		ProductionURL:         os.Getenv("PRODUCTION_URL"),
+		ProductionURL:         os.Getenv("PRODUCTION_DOMAIN"),
 	}
 
 	return &Config{
