@@ -85,3 +85,17 @@ func NewStartCountdownResponse(tradeID uuid.UUID, countdown int) *StartCountdown
 		Countdown: countdown,
 	}
 }
+
+type TradeErrorResponse struct {
+	ID    string `json:"id"`
+	Type  string `json:"type"`
+	Error string `json:"error"`
+}
+
+func NewTradeErrorResponse(tradeID uuid.UUID, err string) *TradeErrorResponse {
+	return &TradeErrorResponse{
+		Type:  "trade_error",
+		ID:    tradeID.String(),
+		Error: err,
+	}
+}

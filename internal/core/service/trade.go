@@ -70,6 +70,8 @@ func (s *TradeService) transferItem(ctx context.Context, request *ItemTransferRe
 	return repo.Add(ctx, newItem, request.Item.Quantity)
 }
 
+const MAX_ROOSTERS_QUANTITY = 10
+
 func (s *TradeService) transferRooster(ctx context.Context, request *RoosterTransferRequest, repo port.RoosterRepository) error {
 	if _, err := repo.Get(ctx, request.Rooster.ID); err != nil {
 		return err
@@ -84,6 +86,17 @@ func (s *TradeService) transferRooster(ctx context.Context, request *RoosterTran
 	return repo.Create(ctx, newRooster)
 }
 
+func (s *TradeService) checkMaxRoosters(ctx context.Context, id domain.ID, repo port.RoosterRepository) error {
+	roosterQuantity, err := repo.GetUserRoosterQuantity(ctx, id)
+	if err != nil {
+		return err
+	}
+	if roosterQuantity > MAX_ROOSTERS_QUANTITY {
+		return errors.New("too many roosters")
+	}
+	return nil
+}
+
 func (s *TradeService) swapUserItems(ctx context.Context, user *domain.TradeUser, otherID domain.ID, adapters port.UserTradeTxAdapters) error {
 	for _, item := range user.Items {
 		if item.Type == domain.ItemTradeType {
@@ -96,6 +109,11 @@ func (s *TradeService) swapUserItems(ctx context.Context, user *domain.TradeUser
 			}
 		}
 	}
+
+	if err := s.checkMaxRoosters(ctx, otherID, adapters.RoosterRepository); err != nil {
+		return err
+	}
+
 	return nil
 }
 

@@ -71,6 +71,9 @@ func (t *TradeWebsocket) confirmTrade(ctx context.Context, room *tradeRoom) {
 				conn.Close()
 			}
 		}
+		if err != nil {
+			room.broadcast(response.NewTradeErrorResponse(room.id, err.Error()))
+		}
 	})
 
 	if err != nil {

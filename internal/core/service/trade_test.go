@@ -3,11 +3,13 @@ package service_test
 import (
 	"context"
 	"errors"
+	"fmt"
 	"testing"
 	"time"
 
 	"github.com/acnologla/asuraTrades/internal/core/domain"
 	"github.com/acnologla/asuraTrades/internal/core/dto"
+	"github.com/acnologla/asuraTrades/internal/core/port"
 	"github.com/acnologla/asuraTrades/internal/core/port/mock"
 	"github.com/acnologla/asuraTrades/internal/core/service"
 	"github.com/google/uuid"
@@ -225,7 +227,7 @@ func TestConfirmTrade(t *testing.T) {
 		}
 	})
 
-	t.Run("ticker completes", func(t *testing.T) {
+	t.Run("ticker complete", func(t *testing.T) {
 		suite.mockCache.EXPECT().Get(tradeID).Return(trade, nil)
 		suite.mockCache.EXPECT().Get(tradeID).Return(trade, nil)
 		suite.mockTxProvider.EXPECT().
@@ -255,6 +257,61 @@ func TestConfirmTrade(t *testing.T) {
 		case <-time.After(6 * time.Second):
 			t.Fatal("Callback was not called after ticker completion")
 		}
+	})
+
+	t.Run("max of ten roosters", func(t *testing.T) {
+		roosterQuantity := 11
+		for i := range roosterQuantity {
+			rooster := &domain.Rooster{
+				ID:     uuid.New(),
+				UserID: authorID,
+				Type:   i,
+			}
+			trade.AddItem(authorID, &domain.TradeItem{
+				Rooster: rooster,
+				Type:    domain.RoosterTradeType,
+			})
+			suite.mockRoosterRepo.EXPECT().Get(gomock.Any(), rooster.ID).Return(rooster, nil)
+			suite.mockRoosterRepo.EXPECT().Delete(gomock.Any(), rooster.ID).Return(nil)
+			origin := fmt.Sprintf("Trade with %s", authorID)
+			newRooster := domain.NewRooster(otherID, rooster.Type, origin)
+
+			suite.mockRoosterRepo.EXPECT().Create(gomock.Any(), newRooster).Return(nil)
+		}
+		suite.mockRoosterRepo.EXPECT().GetUserRoosterQuantity(gomock.Any(), otherID).Return(roosterQuantity, nil)
+
+		e := errors.New("too many roosters")
+		suite.mockCache.EXPECT().Get(tradeID).Return(trade, nil)
+		suite.mockCache.EXPECT().Get(tradeID).Return(trade, nil)
+		suite.mockTxProvider.EXPECT().
+			Transact(gomock.Any(), gomock.Any()).
+			DoAndReturn(func(ctx context.Context, txFunc func(adapters port.UserTradeTxAdapters, lock func(domain.ID) error) error) error {
+				return txFunc(port.UserTradeTxAdapters{
+					UserRepository:    suite.mockUserRepo,
+					ItemRepository:    suite.mockItemRepo,
+					RoosterRepository: suite.mockRoosterRepo,
+				}, func(i domain.ID) error {
+					return nil
+				})
+			})
+
+		resultCh := make(chan struct {
+			success bool
+			err     error
+		})
+
+		_, err := suite.tradeService.ConfirmTrade(context.Background(), tradeID, func(success bool, err error) {
+			resultCh <- struct {
+				success bool
+				err     error
+			}{success, err}
+		})
+
+		assert.Nil(t, err)
+
+		result := <-resultCh
+		assert.False(t, result.success)
+		assert.Equal(t, e, result.err)
 	})
 }
 

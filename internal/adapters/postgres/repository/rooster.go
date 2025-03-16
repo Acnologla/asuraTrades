@@ -49,6 +49,19 @@ func (r *RoosterRepository) GetUserRoosters(ctx context.Context, userID domain.I
 	return roosters, nil
 }
 
+func (r *RoosterRepository) GetUserRoosterQuantity(ctx context.Context, userID domain.ID) (int, error) {
+	quantity := 1
+	err := r.db.QueryRow(ctx,
+		"SELECT COUNT(*) FROM rooster WHERE userid = $1",
+		userID).Scan(&quantity)
+
+	if err != nil {
+		return 0, err
+	}
+
+	return quantity, nil
+}
+
 func (r *RoosterRepository) Delete(ctx context.Context, id uuid.UUID) error {
 	_, err := r.db.Exec(ctx,
 		"DELETE FROM rooster WHERE id = $1",

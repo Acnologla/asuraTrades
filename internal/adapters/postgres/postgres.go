@@ -20,5 +20,10 @@ func NewConnection(ctx context.Context, config config.PostgresConfig) Database {
 	if err != nil {
 		panic(err)
 	}
+
+	if err := pool.Ping(ctx); err != nil {
+		panic(err)
+	}
+
 	return pool
 }
