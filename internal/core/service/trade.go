@@ -100,11 +100,11 @@ func (s *TradeService) checkMaxRoosters(ctx context.Context, id domain.ID, repo 
 func (s *TradeService) swapUserItems(ctx context.Context, user *domain.TradeUser, otherID domain.ID, adapters port.UserTradeTxAdapters) error {
 	for _, item := range user.Items {
 		if item.Type == domain.ItemTradeType {
-			if err := s.transferItem(ctx, &ItemTransferRequest{Item: item.Item, NewOwnerID: otherID}, adapters.ItemRepository); err != nil {
+			if err := s.transferItem(ctx, &ItemTransferRequest{Item: item.Item(), NewOwnerID: otherID}, adapters.ItemRepository); err != nil {
 				return err
 			}
 		} else {
-			if err := s.transferRooster(ctx, &RoosterTransferRequest{Rooster: item.Rooster, CurrentOwnerID: user.ID, NewOwnerID: otherID}, adapters.RoosterRepository); err != nil {
+			if err := s.transferRooster(ctx, &RoosterTransferRequest{Rooster: item.Rooster(), CurrentOwnerID: user.ID, NewOwnerID: otherID}, adapters.RoosterRepository); err != nil {
 				return err
 			}
 		}
@@ -117,7 +117,7 @@ func (s *TradeService) swapUserItems(ctx context.Context, user *domain.TradeUser
 	return nil
 }
 
-func (s *TradeService) finishTrade(ctx context.Context, tradeID uuid.UUID) error {
+func (s *TradeService) FinishTrade(ctx context.Context, tradeID uuid.UUID) error {
 	trade, err := s.GetTrade(ctx, tradeID)
 	if err != nil {
 		return err
@@ -160,6 +160,7 @@ const COUNTDOWN_SECONDS = 5
 
 func (s *TradeService) ConfirmTrade(ctx context.Context, tradeID uuid.UUID, callback func(bool, error)) (int, error) {
 	trade, err := s.GetTrade(ctx, tradeID)
+
 	if err != nil {
 		return 0, err
 	}
@@ -173,7 +174,7 @@ func (s *TradeService) ConfirmTrade(ctx context.Context, tradeID uuid.UUID, call
 		defer ticker.Stop()
 		select {
 		case <-ticker.C:
-			err := s.finishTrade(ctx, tradeID)
+			err := s.FinishTrade(ctx, tradeID)
 			callback(err == nil, err)
 		case <-ctx.Done():
 			callback(false, nil)

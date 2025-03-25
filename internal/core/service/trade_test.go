@@ -267,10 +267,7 @@ func TestConfirmTrade(t *testing.T) {
 				UserID: authorID,
 				Type:   i,
 			}
-			trade.AddItem(authorID, &domain.TradeItem{
-				Rooster: rooster,
-				Type:    domain.RoosterTradeType,
-			})
+			trade.AddItem(authorID, domain.NewTradeItemRooster(rooster))
 			suite.mockRoosterRepo.EXPECT().Get(gomock.Any(), rooster.ID).Return(rooster, nil)
 			suite.mockRoosterRepo.EXPECT().Delete(gomock.Any(), rooster.ID).Return(nil)
 			origin := fmt.Sprintf("Trade with %s", authorID)
@@ -313,6 +310,7 @@ func TestConfirmTrade(t *testing.T) {
 		assert.False(t, result.success)
 		assert.Equal(t, e, result.err)
 	})
+
 }
 
 func TestUpdateItem(t *testing.T) {

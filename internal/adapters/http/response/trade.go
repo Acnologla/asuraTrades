@@ -31,19 +31,21 @@ func NewTradeResponse(trade *domain.Trade) *TradeResponse {
 				Type: item.Type.String(),
 			}
 			if item.Type == domain.RoosterTradeType {
+				rooster := item.Rooster()
 				items[i].Data = &UserRoosterResponse{
-					ID:     item.Rooster.ID.String(),
+					ID:     rooster.ID.String(),
 					UserID: user.ID.String(),
-					Origin: item.Rooster.Origin,
-					Type:   item.Rooster.Type,
+					Origin: rooster.Origin,
+					Type:   rooster.Type,
 				}
 			} else {
+				itemEntity := item.Item()
 				items[i].Data = &UserItemResponse{
-					ID:       item.Item.ID.String(),
+					ID:       itemEntity.ID.String(),
 					UserID:   user.ID.String(),
-					Quantity: item.Item.Quantity,
-					ItemID:   item.Item.ItemID,
-					Type:     int(item.Item.Type),
+					Quantity: itemEntity.Quantity,
+					ItemID:   itemEntity.ItemID,
+					Type:     int(itemEntity.Type),
 				}
 			}
 		}
