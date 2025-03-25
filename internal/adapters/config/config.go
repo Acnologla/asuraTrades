@@ -15,6 +15,10 @@ type (
 		Secret string
 	}
 
+	GrpcConfig struct {
+		Port string
+	}
+
 	HTTPConfig struct {
 		Port                  string
 		GenerateTokenPassword string
@@ -24,6 +28,7 @@ type (
 	Config struct {
 		PostgresConfig PostgresConfig
 		JWTConfig      JWTConfig
+		GrpcConfig     GrpcConfig
 		HTTPConfig     HTTPConfig
 		Production     bool
 	}
@@ -44,6 +49,9 @@ func LoadConfig() (*Config, error) {
 	postgresConfig := PostgresConfig{
 		DatabaseURL: os.Getenv("DATABASE_URL"),
 	}
+	grpcConfig := GrpcConfig{
+		Port: os.Getenv("GRPC_PORT"),
+	}
 	httpConfig := HTTPConfig{
 		GenerateTokenPassword: os.Getenv("GENERATE_TOKEN_PASSWORD"),
 		Port:                  os.Getenv("PORT"),
@@ -55,5 +63,6 @@ func LoadConfig() (*Config, error) {
 		HTTPConfig:     httpConfig,
 		JWTConfig:      jwtConfig,
 		Production:     isProduction,
+		GrpcConfig:     grpcConfig,
 	}, nil
 }
