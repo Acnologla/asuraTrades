@@ -20,33 +20,38 @@ This project is a trade system that allows users to exchange items securely and 
 - Allows users to create new trades.
 - Enables trade confirmation, providing a **5-second window** during which users can cancel the trade if permitted.
 
+### gRPC Trusty Trades
+
+- Implements a secure trading mechanism using gRPC.
+- Uses a unique token for authentication.
+- Sends all trade items simultaneously for trading.
+- Provides an all-or-nothing trade process.
+
 ## Technology Stack
 
 - **Database:** PostgreSQL
 - **Cache:** Local cache
 - **Authentication:** JWT
-- **API Communication:**
+- **Communication Protocols:**
   - **HTTP Controllers**: Used for token creation and retrieving user information via tokens.
   - **WebSockets**: Used for real-time trade interactions, including adding/removing items and confirming trades.
+  - **gRPC**: Implements trades where all items are sent at once, without the need for confirmation.
 
 ## Architecture
 
 This project follows the **hexagonal architecture** pattern to ensure modularity and scalability. The main components include:
 
-- **Adapters:** they handle external dependencies such as databases, caching, and WebSockets.
+- **Adapters:** they handle external dependencies such as databases, caching, WebSockets, and gRPC.
 - **Core Domain:** this contains the business logic and domain models.
 - **Entry Point:** The application starts from `cmd/asura-trades/main.go`.
 
 ## Testing
 
-The project includes comprehensive unit tests where we mock the ports (interfaces) using gomock. This approach enables us to thoroughly test our business logic in
-isolation from external dependencies, ensuring the reliability of our services.
+The project includes comprehensive unit tests where we mock the ports (interfaces) using gomock. This approach enables us to thoroughly test our business logic in isolation from external dependencies, ensuring the reliability of our services.
 
 ## License
 
 This project is licensed under the MIT License.
-
----
 
 ### Notes
 

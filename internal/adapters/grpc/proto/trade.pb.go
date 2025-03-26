@@ -69,6 +69,7 @@ type TradeItem struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	Type          int32                  `protobuf:"varint,2,opt,name=type,proto3" json:"type,omitempty"`
+	UserId        uint64                 `protobuf:"varint,3,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -117,12 +118,18 @@ func (x *TradeItem) GetType() int32 {
 	return 0
 }
 
+func (x *TradeItem) GetUserId() uint64 {
+	if x != nil {
+		return x.UserId
+	}
+	return 0
+}
+
 type FinishTradeRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	AuthorId      uint64                 `protobuf:"varint,1,opt,name=author_id,json=authorId,proto3" json:"author_id,omitempty"`
 	OtherId       uint64                 `protobuf:"varint,2,opt,name=other_id,json=otherId,proto3" json:"other_id,omitempty"`
-	TradeId       string                 `protobuf:"bytes,3,opt,name=trade_id,json=tradeId,proto3" json:"trade_id,omitempty"`
-	Items         []*TradeItem           `protobuf:"bytes,4,rep,name=items,proto3" json:"items,omitempty"`
+	Items         []*TradeItem           `protobuf:"bytes,3,rep,name=items,proto3" json:"items,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -169,13 +176,6 @@ func (x *FinishTradeRequest) GetOtherId() uint64 {
 		return x.OtherId
 	}
 	return 0
-}
-
-func (x *FinishTradeRequest) GetTradeId() string {
-	if x != nil {
-		return x.TradeId
-	}
-	return ""
 }
 
 func (x *FinishTradeRequest) GetItems() []*TradeItem {
@@ -447,15 +447,15 @@ const file_proto_trade_proto_rawDesc = "" +
 	"\n" +
 	"\x11proto/trade.proto\x12\x05trade\"'\n" +
 	"\x15GetUserProfileRequest\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\x04R\x02id\"/\n" +
+	"\x02id\x18\x01 \x01(\x04R\x02id\"H\n" +
 	"\tTradeItem\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
-	"\x04type\x18\x02 \x01(\x05R\x04type\"\x8f\x01\n" +
+	"\x04type\x18\x02 \x01(\x05R\x04type\x12\x17\n" +
+	"\auser_id\x18\x03 \x01(\x04R\x06userId\"t\n" +
 	"\x12FinishTradeRequest\x12\x1b\n" +
 	"\tauthor_id\x18\x01 \x01(\x04R\bauthorId\x12\x19\n" +
-	"\bother_id\x18\x02 \x01(\x04R\aotherId\x12\x19\n" +
-	"\btrade_id\x18\x03 \x01(\tR\atradeId\x12&\n" +
-	"\x05items\x18\x04 \x03(\v2\x10.trade.TradeItemR\x05items\"^\n" +
+	"\bother_id\x18\x02 \x01(\x04R\aotherId\x12&\n" +
+	"\x05items\x18\x03 \x03(\v2\x10.trade.TradeItemR\x05items\"^\n" +
 	"\aRooster\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x17\n" +
 	"\auser_id\x18\x02 \x01(\x04R\x06userId\x12\x16\n" +

@@ -16,7 +16,8 @@ type (
 	}
 
 	GrpcConfig struct {
-		Port string
+		Port  string
+		Token string
 	}
 
 	HTTPConfig struct {
@@ -50,7 +51,8 @@ func LoadConfig() (*Config, error) {
 		DatabaseURL: os.Getenv("DATABASE_URL"),
 	}
 	grpcConfig := GrpcConfig{
-		Port: os.Getenv("GRPC_PORT"),
+		Port:  os.Getenv("GRPC_PORT"),
+		Token: os.Getenv("GRPC_TOKEN"),
 	}
 	httpConfig := HTTPConfig{
 		GenerateTokenPassword: os.Getenv("GENERATE_TOKEN_PASSWORD"),

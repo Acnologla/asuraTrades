@@ -17,13 +17,13 @@ message GetUserProfileRequest {
 message TradeItem {
   string id = 1;
   int32 type = 2;
+  uint64 user_id = 3;
 }
 
 message FinishTradeRequest {
   uint64 author_id = 1;
   uint64 other_id = 2;
-  string trade_id = 3;
-  repeated TradeItem items = 4;
+  repeated TradeItem items = 3;
 }
 
 message Rooster {

@@ -5,6 +5,7 @@ import (
 
 	"github.com/acnologla/asuraTrades/internal/adapters/cache"
 	"github.com/acnologla/asuraTrades/internal/adapters/config"
+	"github.com/acnologla/asuraTrades/internal/adapters/grpc"
 	"github.com/acnologla/asuraTrades/internal/adapters/http"
 	"github.com/acnologla/asuraTrades/internal/adapters/http/controllers"
 	"github.com/acnologla/asuraTrades/internal/adapters/http/websocket"
@@ -43,8 +44,9 @@ func main() {
 	userTokenController := controllers.NewUserTokenController(config.HTTPConfig.GenerateTokenPassword, userTokenService)
 	websocketController := websocket.NewTradeWebsocket(userTokenService, tradeService, config.Production, config.HTTPConfig.ProductionURL)
 
-	// initialize the http server
+	// initialize the servers
 
+	go grpc.NewGrpcServer(config.GrpcConfig, userService, tradeService)
 	http.CreateAndServe(config.HTTPConfig, userTokenController, websocketController)
 
 }
