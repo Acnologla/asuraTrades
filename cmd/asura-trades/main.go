@@ -47,6 +47,6 @@ func main() {
 	// initialize the servers
 
 	go grpc.NewGrpcServer(config.GrpcConfig, userService, tradeService)
-	http.CreateAndServe(config.HTTPConfig, userTokenController, websocketController)
+	_ = http.CreateAndServe(config.HTTPConfig, userTokenController, websocketController)
 
 }

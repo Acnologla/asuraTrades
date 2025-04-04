@@ -50,7 +50,7 @@ func (s *server) addItemsToTrade(ctx context.Context, tradeID uuid.UUID, items [
 
 func (s *server) confirmUsersStatus(ctx context.Context, in *proto.FinishTradeRequest, tradeID uuid.UUID) {
 	for _, userID := range []uint64{in.AuthorId, in.OtherId} {
-		s.tradeService.UpdateUserStatus(ctx, dto.NewUpdateUserStatusDTO(tradeID, true, domain.ID(userID)))
+		_, _ = s.tradeService.UpdateUserStatus(ctx, dto.NewUpdateUserStatusDTO(tradeID, true, domain.ID(userID)))
 	}
 }
 

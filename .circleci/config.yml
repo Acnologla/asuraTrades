@@ -1,5 +1,19 @@
 version: 2.1
 jobs:
+  Gosec:
+    docker:
+      - image: cimg/go:1.24.0
+    steps:
+      - checkout
+      - run:
+          name: Install gosec
+          command: go install github.com/securego/gosec/v2/cmd/gosec@latest
+      - run:
+          name: Run gosec
+          command: |
+            export PATH=$PATH:$(go env GOPATH)/bin
+            gosec -exclude=G104 -exclude-dir=internal/adapters/grpc  ./...
+
   Unit-test:
     docker:
       - image: "cimg/go:1.24.0"
@@ -25,7 +39,10 @@ workflows:
   version: 2
   test_and_build:
     jobs:
-      - Unit-test
+      - Gosec
+      - Unit-test:
+          requires:
+            - Gosec
       - Build-and-deploy:
           requires:
             - Unit-test

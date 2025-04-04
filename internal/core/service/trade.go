@@ -149,7 +149,7 @@ func (s *TradeService) FinishTrade(ctx context.Context, tradeID uuid.UUID) error
 	})
 
 	if err == nil {
-		s.cache.Delete(tradeID)
+		_ = s.cache.Delete(tradeID)
 	}
 
 	return err

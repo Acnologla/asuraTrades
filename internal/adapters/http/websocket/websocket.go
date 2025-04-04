@@ -118,10 +118,10 @@ func (t *TradeWebsocket) processMessage(ctx context.Context, room *tradeRoom, me
 }
 
 func (t *TradeWebsocket) sendPongs(conn *websocket.Conn) {
-	conn.SetReadDeadline(time.Now().Add(PONG_INTERVAL))
+	_ = conn.SetReadDeadline(time.Now().Add(PONG_INTERVAL))
 
 	conn.SetPingHandler(func(string) error {
-		conn.SetReadDeadline(time.Now().Add(PONG_INTERVAL))
+		_ = conn.SetReadDeadline(time.Now().Add(PONG_INTERVAL))
 		return conn.WriteControl(websocket.PongMessage, []byte{}, time.Now().Add(10*time.Second))
 	})
 
@@ -148,7 +148,7 @@ func (t *TradeWebsocket) initializeUser(ctx context.Context, conn *websocket.Con
 		message := &roomMessage{}
 		if err := conn.ReadJSON(message); err != nil {
 			if websocket.IsCloseError(err, websocket.CloseNormalClosure, websocket.CloseGoingAway) {
-				conn.WriteControl(websocket.CloseMessage,
+				_ = conn.WriteControl(websocket.CloseMessage,
 					websocket.FormatCloseMessage(websocket.CloseNormalClosure, "Goodbye"),
 					time.Now().Add(time.Second))
 			}
@@ -178,7 +178,7 @@ func (t *TradeWebsocket) UpgradeConnection(c *gin.Context) {
 			return
 		}
 	}
-	conn.WriteJSON(response.NewTradeResponse(trade))
+	_ = conn.WriteJSON(response.NewTradeResponse(trade))
 
 	t.initializeUser(c.Request.Context(), conn, room, tokenInfo)
 }

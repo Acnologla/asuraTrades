@@ -267,7 +267,7 @@ func TestConfirmTrade(t *testing.T) {
 				UserID: authorID,
 				Type:   i,
 			}
-			trade.AddItem(authorID, domain.NewTradeItemRooster(rooster))
+			_ = trade.AddItem(authorID, domain.NewTradeItemRooster(rooster))
 			suite.mockRoosterRepo.EXPECT().Get(gomock.Any(), rooster.ID).Return(rooster, nil)
 			suite.mockRoosterRepo.EXPECT().Delete(gomock.Any(), rooster.ID).Return(nil)
 			origin := fmt.Sprintf("Trade with %s", authorID)

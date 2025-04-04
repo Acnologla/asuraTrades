@@ -53,7 +53,7 @@ func (p *TradeTransactionProvider) Transact(ctx context.Context, txFunc func(ada
 
 	err = txFunc(adapters, lock)
 	if err != nil {
-		tx.Rollback(ctx)
+		_ = tx.Rollback(ctx)
 		return err
 	}
 
