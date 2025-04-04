@@ -1,4 +1,5 @@
 version: 2.1
+
 jobs:
   Gosec:
     docker:
@@ -12,7 +13,22 @@ jobs:
           name: Run gosec
           command: |
             export PATH=$PATH:$(go env GOPATH)/bin
-            gosec -exclude=G104 -exclude-dir=internal/adapters/grpc  ./...
+            gosec -exclude-dir=internal/adapters/grpc ./...
+
+  Lint:
+    docker:
+      - image: cimg/go:1.24.0
+    steps:
+      - checkout
+      - run:
+          name: Install golangci-lint
+          command: |
+            curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v2.0.2
+      - run:
+          name: Run golangci-lint
+          command: |
+            export PATH=$PATH:$(go env GOPATH)/bin
+            golangci-lint run --timeout=5m
 
   Unit-test:
     docker:
@@ -22,6 +38,7 @@ jobs:
       - run:
           name: Unit test
           command: go test ./...
+
   Build-and-deploy:
     docker:
       - image: jdrouet/docker-with-buildx:stable
@@ -40,9 +57,11 @@ workflows:
   test_and_build:
     jobs:
       - Gosec
+      - Lint
       - Unit-test:
           requires:
             - Gosec
+            - Lint
       - Build-and-deploy:
           requires:
             - Unit-test

@@ -68,7 +68,7 @@ func (t *TradeWebsocket) confirmTrade(ctx context.Context, room *tradeRoom) {
 		if b {
 			room.broadcast(response.NewTradeConfirmedResponse(room.id))
 			for _, conn := range room.users {
-				conn.Close()
+				_ = conn.Close()
 			}
 		}
 		if err != nil {
