@@ -16,6 +16,7 @@ type UserTradeTxAdapters struct {
 	UserRepository    UserRepository
 	ItemRepository    ItemRepository
 	RoosterRepository RoosterRepository
+	PetRepository     PetRepository
 }
 
 type TradeTxProvider interface {

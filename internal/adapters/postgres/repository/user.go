@@ -49,6 +49,7 @@ func (p *TradeTransactionProvider) Transact(ctx context.Context, txFunc func(ada
 		UserRepository:    NewUserRepository(tx),
 		RoosterRepository: NewRoosterRepository(tx),
 		ItemRepository:    NewItemRepository(tx),
+		PetRepository:     NewPetRepository(tx),
 	}
 
 	err = txFunc(adapters, lock)

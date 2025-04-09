@@ -17,15 +17,18 @@ type UpdateUserStatusWrapper struct {
 	Done  bool
 }
 
-type RoosterTransferRequest struct {
-	Rooster        *domain.Rooster
+type TransferRequest[T domain.Tradeable] struct {
+	Object         T
 	NewOwnerID     domain.ID
 	CurrentOwnerID domain.ID
 }
 
-type ItemTransferRequest struct {
-	Item       *domain.Item
-	NewOwnerID domain.ID
+func newTransferRequest[T domain.Tradeable](object T, newOwnerID, currentOwnerID domain.ID) *TransferRequest[T] {
+	return &TransferRequest[T]{
+		Object:         object,
+		NewOwnerID:     newOwnerID,
+		CurrentOwnerID: currentOwnerID,
+	}
 }
 
 type TradeService struct {
@@ -52,39 +55,38 @@ func (s *TradeService) CreateTrade(ctx context.Context, tradeID uuid.UUID, autho
 	return trade, nil
 }
 
-func (s *TradeService) transferItem(ctx context.Context, request *ItemTransferRequest, repo port.ItemRepository) error {
-	i, err := repo.Get(ctx, request.Item.ID)
+func (s *TradeService) transferItem(ctx context.Context, request *TransferRequest[*domain.Item], repo port.ItemRepository) error {
+	i, err := repo.Get(ctx, request.Object.ID)
 	if err != nil {
 		return err
 	}
 
-	if i.Quantity < request.Item.Quantity {
+	if i.Quantity < request.Object.Quantity {
 		return errors.New("not enough items")
 	}
 
-	if err := repo.Remove(ctx, request.Item.ID, request.Item.Quantity); err != nil {
+	if err := repo.Remove(ctx, request.Object.ID, request.Object.Quantity); err != nil {
 		return err
 	}
 
-	newItem := domain.NewItem(request.NewOwnerID, request.Item.ItemID, request.Item.Type)
-	return repo.Add(ctx, newItem, request.Item.Quantity)
+	newItem := domain.NewItem(request.NewOwnerID, request.Object.ItemID, request.Object.Type)
+	return repo.Add(ctx, newItem, request.Object.Quantity)
+}
+
+func (s *TradeService) transferPet(ctx context.Context, request *TransferRequest[*domain.Pet], repo port.PetRepository) error {
+	if _, err := repo.Get(ctx, request.Object.ID); err != nil {
+		return err
+	}
+
+	if err := repo.Delete(ctx, request.Object.ID); err != nil {
+		return err
+	}
+
+	newPet := domain.NewPet(request.NewOwnerID, request.Object.Type, request.Object.Level)
+	return repo.Create(ctx, newPet)
 }
 
 const MAX_ROOSTERS_QUANTITY = 10
-
-func (s *TradeService) transferRooster(ctx context.Context, request *RoosterTransferRequest, repo port.RoosterRepository) error {
-	if _, err := repo.Get(ctx, request.Rooster.ID); err != nil {
-		return err
-	}
-
-	if err := repo.Delete(ctx, request.Rooster.ID); err != nil {
-		return err
-	}
-
-	origin := fmt.Sprintf("Trade with %s", request.CurrentOwnerID)
-	newRooster := domain.NewRooster(request.NewOwnerID, request.Rooster.Type, origin)
-	return repo.Create(ctx, newRooster)
-}
 
 func (s *TradeService) checkMaxRoosters(ctx context.Context, id domain.ID, repo port.RoosterRepository) error {
 	roosterQuantity, err := repo.GetUserRoosterQuantity(ctx, id)
@@ -97,21 +99,39 @@ func (s *TradeService) checkMaxRoosters(ctx context.Context, id domain.ID, repo 
 	return nil
 }
 
-func (s *TradeService) swapUserItems(ctx context.Context, user *domain.TradeUser, otherID domain.ID, adapters port.UserTradeTxAdapters) error {
-	for _, item := range user.Items {
-		if item.Type == domain.ItemTradeType {
-			if err := s.transferItem(ctx, &ItemTransferRequest{Item: item.Item(), NewOwnerID: otherID}, adapters.ItemRepository); err != nil {
-				return err
-			}
-		} else {
-			if err := s.transferRooster(ctx, &RoosterTransferRequest{Rooster: item.Rooster(), CurrentOwnerID: user.ID, NewOwnerID: otherID}, adapters.RoosterRepository); err != nil {
-				return err
-			}
-		}
+func (s *TradeService) transferRooster(ctx context.Context, request *TransferRequest[*domain.Rooster], repo port.RoosterRepository) error {
+	if _, err := repo.Get(ctx, request.Object.ID); err != nil {
+		return err
 	}
 
-	if err := s.checkMaxRoosters(ctx, otherID, adapters.RoosterRepository); err != nil {
+	if err := repo.Delete(ctx, request.Object.ID); err != nil {
 		return err
+	}
+
+	origin := fmt.Sprintf("Trade with %s", request.CurrentOwnerID)
+	newRooster := domain.NewRooster(request.NewOwnerID, request.Object.Type, origin)
+	if err := repo.Create(ctx, newRooster); err != nil {
+		return err
+	}
+
+	return s.checkMaxRoosters(ctx, request.NewOwnerID, repo)
+}
+
+func (s *TradeService) swapUserItems(ctx context.Context, user *domain.TradeUser, otherID domain.ID, adapters port.UserTradeTxAdapters) error {
+	for _, item := range user.Items {
+		var err error
+		switch item.Type {
+		case domain.ItemTradeType:
+			err = s.transferItem(ctx, newTransferRequest(item.Item(), otherID, user.ID), adapters.ItemRepository)
+		case domain.RoosterTradeType:
+			err = s.transferRooster(ctx, newTransferRequest(item.Rooster(), otherID, user.ID), adapters.RoosterRepository)
+		case domain.PetTradeType:
+			err = s.transferPet(ctx, newTransferRequest(item.Pet(), otherID, user.ID), adapters.PetRepository)
+		}
+
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil

@@ -7,10 +7,11 @@ import (
 	"github.com/acnologla/asuraTrades/internal/core/domain"
 	"github.com/acnologla/asuraTrades/internal/core/port"
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 )
 
 type ItemRepository struct {
-	db postgres.Database
+	*BaseRepository[*domain.Item]
 }
 
 func (r *ItemRepository) Get(ctx context.Context, id uuid.UUID) (*domain.Item, error) {
@@ -20,33 +21,17 @@ func (r *ItemRepository) Get(ctx context.Context, id uuid.UUID) (*domain.Item, e
 		"SELECT id, userid, type, itemID, quantity FROM item WHERE id = $1",
 		id).Scan(&item.ID, &item.UserID, &item.Type, &item.ItemID, &item.Quantity)
 
-	if err != nil {
-		return nil, err
-	}
-
-	return item, nil
+	return item, err
 }
 
 func (r *ItemRepository) GetUserItems(ctx context.Context, userID domain.ID) ([]*domain.Item, error) {
-	rows, err := r.db.Query(ctx,
+	return r.GetEntitiesByUserID(ctx, userID,
 		"SELECT id, userid, quantity, itemid, type FROM item WHERE userid = $1",
-		userID)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	items := make([]*domain.Item, 0)
-
-	for rows.Next() {
-		item := &domain.Item{}
-		if err := rows.Scan(&item.ID, &item.UserID, &item.Quantity, &item.ItemID, &item.Type); err != nil {
-			return nil, err
-		}
-		items = append(items, item)
-	}
-
-	return items, nil
+		func(rows pgx.Rows) (*domain.Item, error) {
+			item := &domain.Item{}
+			err := rows.Scan(&item.ID, &item.UserID, &item.Quantity, &item.ItemID, &item.Type)
+			return item, err
+		})
 }
 
 func (r *ItemRepository) Add(ctx context.Context, item *domain.Item, quantity int) error {
@@ -100,5 +85,7 @@ func (r *ItemRepository) Remove(ctx context.Context, id uuid.UUID, quantity int)
 }
 
 func NewItemRepository(db postgres.Database) port.ItemRepository {
-	return &ItemRepository{db: db}
+	return &ItemRepository{
+		NewBaseRepository[*domain.Item](db, "item"),
+	}
 }

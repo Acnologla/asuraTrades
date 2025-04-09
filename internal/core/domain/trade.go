@@ -14,6 +14,7 @@ type TradeItemType int
 const (
 	ItemTradeType TradeItemType = iota
 	RoosterTradeType
+	PetTradeType
 )
 
 func (t TradeItemType) String() string {
@@ -27,37 +28,58 @@ func (t TradeItemType) String() string {
 	return ""
 }
 
+type Tradeable interface {
+	IsTradeable() bool
+	GetID() uuid.UUID
+}
+
+func GetTradableEntities[T Tradeable](entities []T) []T {
+	tradable := make([]T, 0, len(entities))
+	for _, entity := range entities {
+		if entity.IsTradeable() {
+			tradable = append(tradable, entity)
+		}
+	}
+	return tradable
+}
+
 type TradeItem struct {
-	Type    TradeItemType
-	rooster *Rooster
-	item    *Item
+	Type        TradeItemType
+	TradeObject Tradeable
 }
 
 func (t *TradeItem) Rooster() *Rooster {
 	if t.Type != RoosterTradeType {
 		panic("trade item is not a rooster")
 	}
-	return t.rooster
+	return t.TradeObject.(*Rooster)
+}
+
+func (t *TradeItem) Pet() *Pet {
+	if t.Type != PetTradeType {
+		panic("trade item is not a pet")
+	}
+	return t.TradeObject.(*Pet)
 }
 
 func (t *TradeItem) Item() *Item {
 	if t.Type != ItemTradeType {
 		panic("trade item is not an item")
 	}
-	return t.item
+	return t.TradeObject.(*Item)
 }
 
 func NewTradeItemRooster(rooster *Rooster) *TradeItem {
 	return &TradeItem{
-		Type:    RoosterTradeType,
-		rooster: rooster,
+		Type:        RoosterTradeType,
+		TradeObject: rooster,
 	}
 }
 
 func NewTradeItemItem(item *Item) *TradeItem {
 	return &TradeItem{
-		Type: ItemTradeType,
-		item: item,
+		Type:        ItemTradeType,
+		TradeObject: item,
 	}
 }
 

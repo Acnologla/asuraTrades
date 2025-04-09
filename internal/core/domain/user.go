@@ -26,13 +26,15 @@ type UserProfile struct {
 	*User
 	Roosters []*Rooster
 	Items    []*Item
+	Pets     []*Pet
 }
 
-func NewUserProfile(user *User, roosters []*Rooster, items []*Item) *UserProfile {
+func NewUserProfile(user *User, roosters []*Rooster, items []*Item, pets []*Pet) *UserProfile {
 	return &UserProfile{
 		User:     user,
-		Roosters: roosters,
-		Items:    items,
+		Roosters: GetTradableEntities(roosters),
+		Items:    GetTradableEntities(items),
+		Pets:     GetTradableEntities(pets),
 	}
 }
 

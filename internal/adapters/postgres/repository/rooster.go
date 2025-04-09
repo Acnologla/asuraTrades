@@ -7,10 +7,11 @@ import (
 	"github.com/acnologla/asuraTrades/internal/core/domain"
 	"github.com/acnologla/asuraTrades/internal/core/port"
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 )
 
 type RoosterRepository struct {
-	db postgres.Database
+	*BaseRepository[*domain.Rooster]
 }
 
 func (r *RoosterRepository) Get(ctx context.Context, id uuid.UUID) (*domain.Rooster, error) {
@@ -20,33 +21,17 @@ func (r *RoosterRepository) Get(ctx context.Context, id uuid.UUID) (*domain.Roos
 		"SELECT id, userid, type, COALESCE(equip, false) FROM rooster WHERE id = $1",
 		id).Scan(&rooster.ID, &rooster.UserID, &rooster.Type, &rooster.Equip)
 
-	if err != nil {
-		return nil, err
-	}
-
-	return rooster, nil
+	return rooster, err
 }
 
 func (r *RoosterRepository) GetUserRoosters(ctx context.Context, userID domain.ID) ([]*domain.Rooster, error) {
-	rows, err := r.db.Query(ctx,
+	return r.GetEntitiesByUserID(ctx, userID,
 		"SELECT id, userid, type, COALESCE(equip,false) FROM rooster WHERE userid = $1",
-		userID)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	roosters := make([]*domain.Rooster, 0)
-
-	for rows.Next() {
-		rooster := &domain.Rooster{}
-		if err := rows.Scan(&rooster.ID, &rooster.UserID, &rooster.Type, &rooster.Equip); err != nil {
-			return nil, err
-		}
-		roosters = append(roosters, rooster)
-	}
-
-	return roosters, nil
+		func(rows pgx.Rows) (*domain.Rooster, error) {
+			rooster := &domain.Rooster{}
+			err := rows.Scan(&rooster.ID, &rooster.UserID, &rooster.Type, &rooster.Equip)
+			return rooster, err
+		})
 }
 
 func (r *RoosterRepository) GetUserRoosterQuantity(ctx context.Context, userID domain.ID) (int, error) {
@@ -59,18 +44,7 @@ func (r *RoosterRepository) GetUserRoosterQuantity(ctx context.Context, userID d
 		return 0, err
 	}
 
-	return quantity, nil
-}
-
-func (r *RoosterRepository) Delete(ctx context.Context, id uuid.UUID) error {
-	_, err := r.db.Exec(ctx,
-		"DELETE FROM rooster WHERE id = $1",
-		id)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return quantity, err
 }
 
 func (r *RoosterRepository) Create(ctx context.Context, rooster *domain.Rooster) error {
@@ -78,13 +52,11 @@ func (r *RoosterRepository) Create(ctx context.Context, rooster *domain.Rooster)
 		"INSERT INTO rooster (userid, type, origin, equip) VALUES ($1, $2, $3, false)",
 		rooster.UserID, rooster.Type, rooster.Origin)
 
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
 func NewRoosterRepository(db postgres.Database) port.RoosterRepository {
-	return &RoosterRepository{db: db}
+	return &RoosterRepository{
+		NewBaseRepository[*domain.Rooster](db, "rooster"),
+	}
 }

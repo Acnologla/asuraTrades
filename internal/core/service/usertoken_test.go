@@ -31,6 +31,7 @@ type TestSuite struct {
 	userRepo      *mock.MockUserRepository
 	itemRepo      *mock.MockItemRepository
 	roosterRepo   *mock.MockRoosterRepository
+	petRepo       *mock.MockPetRepository
 	userService   *service.UserService
 	tokenService  *service.UserTokenService
 }
@@ -43,8 +44,9 @@ func SetupTest(t *testing.T) *TestSuite {
 	mockUserRepo := mock.NewMockUserRepository(ctrl)
 	mockItemRepo := mock.NewMockItemRepository(ctrl)
 	mockRoosterRepo := mock.NewMockRoosterRepository(ctrl)
+	mockPetRepo := mock.NewMockPetRepository(ctrl)
 
-	userService := service.NewUserService(mockUserRepo, mockRoosterRepo, mockItemRepo)
+	userService := service.NewUserService(mockUserRepo, mockRoosterRepo, mockItemRepo, mockPetRepo)
 	tokenService := service.NewUserTokenService(mockTokenProvider, userService)
 
 	return &TestSuite{
@@ -54,6 +56,7 @@ func SetupTest(t *testing.T) *TestSuite {
 		userRepo:      mockUserRepo,
 		itemRepo:      mockItemRepo,
 		roosterRepo:   mockRoosterRepo,
+		petRepo:       mockPetRepo,
 		userService:   userService,
 		tokenService:  tokenService,
 	}
@@ -78,6 +81,10 @@ func TestGetTradeTokenResponse(t *testing.T) {
 		Type: 2,
 	}
 
+	fakePet := &domain.Pet{
+		ID: uuid.New(),
+	}
+
 	fakeToken := gofakeit.UUID()
 
 	response := &service.GetTradeTokenResponseWrapper{
@@ -88,6 +95,7 @@ func TestGetTradeTokenResponse(t *testing.T) {
 			},
 			Roosters: []*domain.Rooster{fakeRooster},
 			Items:    []*domain.Item{fakeItem},
+			Pets:     []*domain.Pet{fakePet},
 		},
 	}
 
@@ -148,6 +156,7 @@ func TestGetTradeTokenResponse(t *testing.T) {
 				}, nil)
 				suite.itemRepo.EXPECT().GetUserItems(gomock.Any(), somerandomID).Return(response.UserProfile.Items, nil)
 				suite.roosterRepo.EXPECT().GetUserRoosters(gomock.Any(), somerandomID).Return(response.UserProfile.Roosters, nil)
+				suite.petRepo.EXPECT().GetUserPets(gomock.Any(), somerandomID).Return(response.UserProfile.Pets, nil)
 			},
 			res: response,
 			err: nil,

@@ -36,10 +36,11 @@ func SetupTradeServiceTest(t *testing.T) *TradeServiceTestSuite {
 	mockUserRepo := mock.NewMockUserRepository(ctrl)
 	mockItemRepo := mock.NewMockItemRepository(ctrl)
 	mockRoosterRepo := mock.NewMockRoosterRepository(ctrl)
+	mocKPetRepo := mock.NewMockPetRepository(ctrl)
 	mockTxProvider := mock.NewMockTradeTxProvider(ctrl)
 	mockCache := mock.NewMockTradeCache(ctrl)
 
-	userService := service.NewUserService(mockUserRepo, mockRoosterRepo, mockItemRepo)
+	userService := service.NewUserService(mockUserRepo, mockRoosterRepo, mockItemRepo, mocKPetRepo)
 	tradeService := service.NewTradeService(mockCache, userService, mockTxProvider)
 
 	return &TradeServiceTestSuite{
@@ -272,10 +273,10 @@ func TestConfirmTrade(t *testing.T) {
 			suite.mockRoosterRepo.EXPECT().Delete(gomock.Any(), rooster.ID).Return(nil)
 			origin := fmt.Sprintf("Trade with %s", authorID)
 			newRooster := domain.NewRooster(otherID, rooster.Type, origin)
+			suite.mockRoosterRepo.EXPECT().GetUserRoosterQuantity(gomock.Any(), otherID).Return(i+1, nil)
 
 			suite.mockRoosterRepo.EXPECT().Create(gomock.Any(), newRooster).Return(nil)
 		}
-		suite.mockRoosterRepo.EXPECT().GetUserRoosterQuantity(gomock.Any(), otherID).Return(roosterQuantity, nil)
 
 		e := errors.New("too many roosters")
 		suite.mockCache.EXPECT().Get(tradeID).Return(trade, nil)

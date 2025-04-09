@@ -32,11 +32,12 @@ func main() {
 
 	userRepo := repository.NewUserRepository(postgresConnection)
 	itemRepo := repository.NewItemRepository(postgresConnection)
+	petRepo := repository.NewPetRepository(postgresConnection)
 	roosterRepo := repository.NewRoosterRepository(postgresConnection)
 	userTxProvider := repository.NewTransactionProvider(postgresConnection.(*pgxpool.Pool))
 
 	// initialize services
-	userService := service.NewUserService(userRepo, roosterRepo, itemRepo)
+	userService := service.NewUserService(userRepo, roosterRepo, itemRepo, petRepo)
 	userTokenService := service.NewUserTokenService(jwtAdapter, userService)
 	tradeService := service.NewTradeService(cacheAdapter, userService, userTxProvider)
 
