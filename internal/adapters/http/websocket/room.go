@@ -7,6 +7,7 @@ import (
 
 	"github.com/acnologla/asuraTrades/internal/adapters/http/response"
 	"github.com/acnologla/asuraTrades/internal/core/domain"
+	"github.com/acnologla/asuraTrades/internal/core/domain/trade"
 	"github.com/acnologla/asuraTrades/internal/core/dto"
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
@@ -57,7 +58,7 @@ func (t *tradeRoom) broadcast(v any) {
 	}
 }
 
-func (t *tradeRoom) updateTrade(trade *domain.Trade) {
+func (t *tradeRoom) updateTrade(trade *trade.Trade) {
 	tradeResponse := response.NewTradeResponse(trade)
 	t.broadcast(tradeResponse)
 }
@@ -114,8 +115,10 @@ func validateRoomMessage(message *roomMessage) error {
 		return errors.New("trade ID cannot be empty")
 	}
 
-	if message.Type == UpdateItem && message.Data.ItemID == uuid.Nil {
-		return errors.New("item ID cannot be empty for UpdateItem message")
+	if message.Type == UpdateItem {
+		if message.Data.ItemID == uuid.Nil {
+			return errors.New("item ID cannot be empty for UpdateItem message")
+		}
 	}
 
 	return nil

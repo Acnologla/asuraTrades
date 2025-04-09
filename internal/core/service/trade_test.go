@@ -8,9 +8,11 @@ import (
 	"time"
 
 	"github.com/acnologla/asuraTrades/internal/core/domain"
+	tradeDomain "github.com/acnologla/asuraTrades/internal/core/domain/trade"
 	"github.com/acnologla/asuraTrades/internal/core/dto"
 	"github.com/acnologla/asuraTrades/internal/core/port"
 	"github.com/acnologla/asuraTrades/internal/core/port/mock"
+
 	"github.com/acnologla/asuraTrades/internal/core/service"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
@@ -76,7 +78,7 @@ func TestUpdateUserStatus(t *testing.T) {
 		User:      generateSnowflakeLikeID(),
 	}
 
-	trade := domain.NewTrade(dto1.ID, dto1.User, dto2.User)
+	trade := tradeDomain.NewTrade(dto1.ID, dto1.User, dto2.User)
 	testCases := []struct {
 		name     string
 		mockFunc func()
@@ -146,7 +148,7 @@ func TestConfirmTrade(t *testing.T) {
 	defer suite.Teardown()
 
 	tradeID, authorID, otherID := uuid.New(), generateSnowflakeLikeID(), generateSnowflakeLikeID()
-	trade := domain.NewTrade(tradeID, authorID, otherID)
+	trade := tradeDomain.NewTrade(tradeID, authorID, otherID)
 	seconds := service.COUNTDOWN_SECONDS
 
 	testCases := []struct {
@@ -268,7 +270,7 @@ func TestConfirmTrade(t *testing.T) {
 				UserID: authorID,
 				Type:   i,
 			}
-			_ = trade.AddItem(authorID, domain.NewTradeItemRooster(rooster))
+			_ = trade.AddItem(authorID, tradeDomain.NewTradeItemRooster(rooster))
 			suite.mockRoosterRepo.EXPECT().Get(gomock.Any(), rooster.ID).Return(rooster, nil)
 			suite.mockRoosterRepo.EXPECT().Delete(gomock.Any(), rooster.ID).Return(nil)
 			origin := fmt.Sprintf("Trade with %s", authorID)
@@ -335,12 +337,12 @@ func TestUpdateItem(t *testing.T) {
 		UserID: authorID,
 		Type:   1,
 	}
-	trade := domain.NewTrade(tradeID, authorID, otherID)
+	trade := tradeDomain.NewTrade(tradeID, authorID, otherID)
 	testCases := []struct {
 		name     string
 		mockFunc func()
 		err      error
-		trade    *domain.Trade
+		trade    *tradeDomain.Trade
 		dt       *dto.TradeItemDTO
 	}{
 		{
@@ -421,7 +423,7 @@ func TestUpdateItem(t *testing.T) {
 				suite.mockRoosterRepo.EXPECT().Get(suite.ctx, dto4.ItemID).Return(fakeRooster, nil)
 			},
 			trade: nil,
-			err:   errors.New("rooster already added"),
+			err:   errors.New("item already added"),
 			dt:    dto4,
 		},
 		{
@@ -484,12 +486,12 @@ func TestCreateTrade(t *testing.T) {
 		name     string
 		mockFunc func()
 		err      error
-		trade    *domain.Trade
+		trade    *tradeDomain.Trade
 	}{
 		{
 			name: "Trade arleady exists",
 			mockFunc: func() {
-				suite.mockCache.EXPECT().Get(tradeID).Return(&domain.Trade{}, nil)
+				suite.mockCache.EXPECT().Get(tradeID).Return(&tradeDomain.Trade{}, nil)
 			},
 			trade: nil,
 			err:   errors.New("trade already exists"),
@@ -509,7 +511,7 @@ func TestCreateTrade(t *testing.T) {
 				suite.mockCache.EXPECT().Get(tradeID).Return(nil, nil)
 				suite.mockCache.EXPECT().Update(tradeID, gomock.Any()).Return(nil)
 			},
-			trade: domain.NewTrade(tradeID, authorID, otherID),
+			trade: tradeDomain.NewTrade(tradeID, authorID, otherID),
 			err:   nil,
 		},
 	}

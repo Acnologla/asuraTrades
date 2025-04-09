@@ -12,7 +12,7 @@ package mock
 import (
 	reflect "reflect"
 
-	domain "github.com/acnologla/asuraTrades/internal/core/domain"
+	trade "github.com/acnologla/asuraTrades/internal/core/domain/trade"
 	uuid "github.com/google/uuid"
 	gomock "go.uber.org/mock/gomock"
 )
@@ -56,10 +56,10 @@ func (mr *MockTradeCacheMockRecorder) Delete(id any) *gomock.Call {
 }
 
 // Get mocks base method.
-func (m *MockTradeCache) Get(id uuid.UUID) (*domain.Trade, error) {
+func (m *MockTradeCache) Get(id uuid.UUID) (*trade.Trade, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Get", id)
-	ret0, _ := ret[0].(*domain.Trade)
+	ret0, _ := ret[0].(*trade.Trade)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -71,7 +71,7 @@ func (mr *MockTradeCacheMockRecorder) Get(id any) *gomock.Call {
 }
 
 // Set mocks base method.
-func (m *MockTradeCache) Set(id uuid.UUID, trade *domain.Trade) error {
+func (m *MockTradeCache) Set(id uuid.UUID, trade *trade.Trade) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Set", id, trade)
 	ret0, _ := ret[0].(error)
@@ -85,7 +85,7 @@ func (mr *MockTradeCacheMockRecorder) Set(id, trade any) *gomock.Call {
 }
 
 // Update mocks base method.
-func (m *MockTradeCache) Update(id uuid.UUID, trade *domain.Trade) error {
+func (m *MockTradeCache) Update(id uuid.UUID, trade *trade.Trade) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Update", id, trade)
 	ret0, _ := ret[0].(error)

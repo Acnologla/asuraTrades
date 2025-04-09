@@ -73,7 +73,7 @@ func isViolation(filePath, importPath string) bool {
 
 	// core/domain can only import third parties libs or golang libs
 	if strings.Contains(filePath, "/core/domain") {
-		return true
+		return !strings.Contains(internalImportPath, "/core/domain")
 	}
 
 	// core/port can only import domain

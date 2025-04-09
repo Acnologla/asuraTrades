@@ -1,7 +1,7 @@
 package response
 
 import (
-	"github.com/acnologla/asuraTrades/internal/core/domain"
+	tradeDomain "github.com/acnologla/asuraTrades/internal/core/domain/trade"
 	"github.com/google/uuid"
 )
 
@@ -22,7 +22,7 @@ type TradeResponse struct {
 	Users map[string]*TradeUserResponse `json:"users"`
 }
 
-func NewTradeResponse(trade *domain.Trade) *TradeResponse {
+func NewTradeResponse(trade *tradeDomain.Trade) *TradeResponse {
 	users := make(map[string]*TradeUserResponse, len(trade.Users))
 	for id, user := range trade.Users {
 		items := make([]*TradeItemResponse, len(user.Items))
@@ -30,7 +30,7 @@ func NewTradeResponse(trade *domain.Trade) *TradeResponse {
 			items[i] = &TradeItemResponse{
 				Type: item.Type.String(),
 			}
-			if item.Type == domain.RoosterTradeType {
+			if item.Type == tradeDomain.RoosterTradeType {
 				rooster := item.Rooster()
 				items[i].Data = &UserRoosterResponse{
 					ID:     rooster.ID.String(),

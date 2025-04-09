@@ -2,11 +2,12 @@ package dto
 
 import (
 	"github.com/acnologla/asuraTrades/internal/core/domain"
+	"github.com/acnologla/asuraTrades/internal/core/domain/trade"
 	"github.com/google/uuid"
 )
 
 type TradeItemDTO struct {
-	Type   domain.TradeItemType
+	Type   trade.TradeItemType
 	ID     uuid.UUID
 	ItemID uuid.UUID
 	User   domain.ID
@@ -21,7 +22,7 @@ type UpdateUserStatusDTO struct {
 
 func NewTradeItemDTO(t int, ID, itemID uuid.UUID, user domain.ID, remove bool) *TradeItemDTO {
 	return &TradeItemDTO{
-		Type:   domain.TradeItemType(t),
+		Type:   trade.TradeItemType(t),
 		ID:     ID,
 		ItemID: itemID,
 		User:   user,

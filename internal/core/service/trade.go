@@ -7,23 +7,24 @@ import (
 	"time"
 
 	"github.com/acnologla/asuraTrades/internal/core/domain"
+	tradeDomain "github.com/acnologla/asuraTrades/internal/core/domain/trade"
 	"github.com/acnologla/asuraTrades/internal/core/dto"
 	"github.com/acnologla/asuraTrades/internal/core/port"
 	"github.com/google/uuid"
 )
 
 type UpdateUserStatusWrapper struct {
-	Trade *domain.Trade
+	Trade *tradeDomain.Trade
 	Done  bool
 }
 
-type TransferRequest[T domain.Tradeable] struct {
+type TransferRequest[T tradeDomain.Tradeable] struct {
 	Object         T
 	NewOwnerID     domain.ID
 	CurrentOwnerID domain.ID
 }
 
-func newTransferRequest[T domain.Tradeable](object T, newOwnerID, currentOwnerID domain.ID) *TransferRequest[T] {
+func newTransferRequest[T tradeDomain.Tradeable](object T, newOwnerID, currentOwnerID domain.ID) *TransferRequest[T] {
 	return &TransferRequest[T]{
 		Object:         object,
 		NewOwnerID:     newOwnerID,
@@ -37,17 +38,17 @@ type TradeService struct {
 	userTx      port.TradeTxProvider
 }
 
-func (s *TradeService) GetTrade(ctx context.Context, id uuid.UUID) (*domain.Trade, error) {
+func (s *TradeService) GetTrade(ctx context.Context, id uuid.UUID) (*tradeDomain.Trade, error) {
 	return s.cache.Get(id)
 }
 
-func (s *TradeService) CreateTrade(ctx context.Context, tradeID uuid.UUID, author, other domain.ID) (*domain.Trade, error) {
+func (s *TradeService) CreateTrade(ctx context.Context, tradeID uuid.UUID, author, other domain.ID) (*tradeDomain.Trade, error) {
 
 	if exists, err := s.GetTrade(ctx, tradeID); err == nil && exists != nil {
 		return nil, errors.New("trade already exists")
 	}
 
-	trade := domain.NewTrade(tradeID, author, other)
+	trade := tradeDomain.NewTrade(tradeID, author, other)
 	if err := s.cache.Update(tradeID, trade); err != nil {
 		return nil, err
 	}
@@ -117,15 +118,15 @@ func (s *TradeService) transferRooster(ctx context.Context, request *TransferReq
 	return s.checkMaxRoosters(ctx, request.NewOwnerID, repo)
 }
 
-func (s *TradeService) swapUserItems(ctx context.Context, user *domain.TradeUser, otherID domain.ID, adapters port.UserTradeTxAdapters) error {
+func (s *TradeService) swapUserItems(ctx context.Context, user *tradeDomain.TradeUser, otherID domain.ID, adapters port.UserTradeTxAdapters) error {
 	for _, item := range user.Items {
 		var err error
 		switch item.Type {
-		case domain.ItemTradeType:
+		case tradeDomain.ItemTradeType:
 			err = s.transferItem(ctx, newTransferRequest(item.Item(), otherID, user.ID), adapters.ItemRepository)
-		case domain.RoosterTradeType:
+		case tradeDomain.RoosterTradeType:
 			err = s.transferRooster(ctx, newTransferRequest(item.Rooster(), otherID, user.ID), adapters.RoosterRepository)
-		case domain.PetTradeType:
+		case tradeDomain.PetTradeType:
 			err = s.transferPet(ctx, newTransferRequest(item.Pet(), otherID, user.ID), adapters.PetRepository)
 		}
 
@@ -148,7 +149,7 @@ func (s *TradeService) FinishTrade(ctx context.Context, tradeID uuid.UUID) error
 	}
 
 	err = s.userTx.Transact(ctx, func(adapters port.UserTradeTxAdapters, lock func(domain.ID) error) error {
-		users := []*domain.TradeUser{}
+		users := []*tradeDomain.TradeUser{}
 		for _, user := range trade.Users {
 			if err := lock(user.ID); err != nil {
 				return err
@@ -225,31 +226,31 @@ func (s *TradeService) UpdateUserStatus(ctx context.Context, dto *dto.UpdateUser
 	}, nil
 }
 
-func (s *TradeService) getUserItem(ctx context.Context, id uuid.UUID, t domain.TradeItemType) (*domain.TradeItem, error) {
+func (s *TradeService) getUserItem(ctx context.Context, id uuid.UUID, t tradeDomain.TradeItemType) (*tradeDomain.TradeItem, error) {
 
-	if t == domain.ItemTradeType {
+	if t == tradeDomain.ItemTradeType {
 		i, err := s.userService.GetItem(ctx, id)
 		if err != nil {
 			return nil, err
 		}
-		return domain.NewTradeItemItem(i), nil
+		return tradeDomain.NewTradeItemItem(i), nil
 	}
 
 	r, err := s.userService.GetRooster(ctx, id)
 	if err != nil {
 		return nil, err
 	}
-	return domain.NewTradeItemRooster(r), nil
+	return tradeDomain.NewTradeItemRooster(r), nil
 }
 
-func (s *TradeService) saveAndReturn(tradeID uuid.UUID, trade *domain.Trade) (*domain.Trade, error) {
+func (s *TradeService) saveAndReturn(tradeID uuid.UUID, trade *tradeDomain.Trade) (*tradeDomain.Trade, error) {
 	if err := s.cache.Update(tradeID, trade); err != nil {
 		return nil, err
 	}
 	return trade, nil
 }
 
-func (s *TradeService) UpdateItem(ctx context.Context, dto *dto.TradeItemDTO) (*domain.Trade, error) {
+func (s *TradeService) UpdateItem(ctx context.Context, dto *dto.TradeItemDTO) (*tradeDomain.Trade, error) {
 	trade, err := s.GetTrade(ctx, dto.ID)
 	if err != nil {
 		return nil, err

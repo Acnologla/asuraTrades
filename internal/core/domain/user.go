@@ -32,9 +32,9 @@ type UserProfile struct {
 func NewUserProfile(user *User, roosters []*Rooster, items []*Item, pets []*Pet) *UserProfile {
 	return &UserProfile{
 		User:     user,
-		Roosters: GetTradableEntities(roosters),
-		Items:    GetTradableEntities(items),
-		Pets:     GetTradableEntities(pets),
+		Roosters: roosters,
+		Items:    items,
+		Pets:     pets,
 	}
 }
 
