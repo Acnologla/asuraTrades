@@ -259,6 +259,26 @@ func (s *TradeService) saveAndReturn(tradeID uuid.UUID, trade *tradedomain.Trade
 	return trade, nil
 }
 
+func (s *TradeService) removeItem(dto *dto.TradeItemDTO, trade *tradedomain.Trade) (*tradedomain.Trade, error) {
+	if err := trade.RemoveItem(dto.User, dto.ItemID, dto.Type); err != nil {
+		return nil, err
+	}
+	return s.saveAndReturn(dto.ID, trade)
+}
+
+func (s *TradeService) addItem(ctx context.Context, dto *dto.TradeItemDTO, trade *tradedomain.Trade) (*tradedomain.Trade, error) {
+	tradeItem, err := s.getUserItem(ctx, dto.ItemID, dto.Type)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := trade.AddItem(dto.User, tradeItem); err != nil {
+		return nil, err
+	}
+
+	return s.saveAndReturn(dto.ID, trade)
+}
+
 func (s *TradeService) UpdateItem(ctx context.Context, dto *dto.TradeItemDTO) (*tradedomain.Trade, error) {
 	trade, err := s.GetTrade(ctx, dto.ID)
 	if err != nil {
@@ -270,22 +290,10 @@ func (s *TradeService) UpdateItem(ctx context.Context, dto *dto.TradeItemDTO) (*
 	}
 
 	if dto.Remove {
-		if err := trade.RemoveItem(dto.User, dto.ItemID, dto.Type); err != nil {
-			return nil, err
-		}
-		return s.saveAndReturn(dto.ID, trade)
+		return s.removeItem(dto, trade)
 	}
 
-	tradeItem, err := s.getUserItem(ctx, dto.ItemID, dto.Type)
-	if err != nil {
-		return nil, err
-	}
-
-	if err := trade.AddItem(dto.User, tradeItem); err != nil {
-		return nil, err
-	}
-
-	return s.saveAndReturn(dto.ID, trade)
+	return s.addItem(ctx, dto, trade)
 }
 
 func NewTradeService(cache port.TradeCache, userService *UserService, userTx port.TradeTxProvider) *TradeService {
