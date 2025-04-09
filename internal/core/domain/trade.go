@@ -118,24 +118,16 @@ func (user *TradeUser) removeItem(item *TradeItem) {
 	user.Items = slices.Delete(user.Items, i, i+1)
 }
 
-func (user *TradeUser) addRoster(item *TradeItem) error {
-	rooster := item.Rooster()
-	if !rooster.IsTradeable() {
-		return errors.New("rooster is not tradeable")
-	}
-	for _, it := range user.getItemsByType(RoosterTradeType) {
-		if rooster.ID == it.Rooster().ID {
-			return errors.New("rooster already added")
+func (user *TradeUser) addGeneric(item *TradeItem) error {
+	for _, it := range user.getItemsByType(item.Type) {
+		if item.TradeObject.GetID() == it.TradeObject.GetID() {
+			return errors.New("item already added")
 		}
 	}
 	return user.appendItem(item)
 }
-
 func (user *TradeUser) addItem(item *TradeItem) error {
 	itemEntity := item.Item()
-	if !itemEntity.IsTradeable() {
-		return errors.New("item is not tradeable")
-	}
 
 	for _, it := range user.getItemsByType(ItemTradeType) {
 		if itemEntity.ID == it.Item().ID {
@@ -166,16 +158,20 @@ func (t *Trade) FindUser(userID ID) (*TradeUser, error) {
 }
 
 func (t *Trade) AddItem(userID ID, item *TradeItem) error {
+	if !item.TradeObject.IsTradeable() {
+		return errors.New("item is not tradeable")
+	}
+
 	user, err := t.FindUser(userID)
 	if err != nil {
 		return err
 	}
 
-	if item.Type == RoosterTradeType {
-		return user.addRoster(item)
+	if item.Type == ItemTradeType {
+		return user.addItem(item)
 	}
 
-	return user.addItem(item)
+	return user.addGeneric(item)
 }
 
 func (t *Trade) UpdateUserStatus(userID ID, confirmed bool) error {
@@ -212,14 +208,14 @@ func (t *Trade) removeItem(user *TradeUser, itemID uuid.UUID) error {
 	return errors.New("item not found")
 }
 
-func (t *Trade) removeRooster(user *TradeUser, itemID uuid.UUID) error {
-	for _, item := range user.getItemsByType(RoosterTradeType) {
-		if item.Rooster().ID == itemID {
+func (t *Trade) removeGeneric(user *TradeUser, itemID uuid.UUID, itemType TradeItemType) error {
+	for _, item := range user.getItemsByType(itemType) {
+		if item.TradeObject.GetID() == itemID {
 			user.removeItem(item)
 			return nil
 		}
 	}
-	return errors.New("rooster not found")
+	return errors.New("item not found")
 }
 
 func (t *Trade) RemoveItem(userID ID, itemID uuid.UUID, itemType TradeItemType) error {
@@ -228,10 +224,11 @@ func (t *Trade) RemoveItem(userID ID, itemID uuid.UUID, itemType TradeItemType) 
 		return err
 	}
 
-	if itemType == RoosterTradeType {
-		return t.removeRooster(user, itemID)
+	if itemType == ItemTradeType {
+		return t.removeItem(user, itemID)
 	}
-	return t.removeItem(user, itemID)
+
+	return t.removeGeneric(user, itemID, itemType)
 }
 
 func NewTrade(id uuid.UUID, author, other ID) *Trade {

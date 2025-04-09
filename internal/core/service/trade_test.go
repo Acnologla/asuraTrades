@@ -366,10 +366,10 @@ func TestUpdateItem(t *testing.T) {
 			name: "trade with invalid rooster",
 			mockFunc: func() {
 				suite.mockCache.EXPECT().Get(dto4.ID).Return(trade, nil)
-				suite.mockRoosterRepo.EXPECT().Get(suite.ctx, dto4.ItemID).Return(nil, errors.New("rooster not found"))
+				suite.mockRoosterRepo.EXPECT().Get(suite.ctx, dto4.ItemID).Return(nil, errors.New("item not found"))
 			},
 			trade: nil,
-			err:   errors.New("rooster not found"),
+			err:   errors.New("item not found"),
 			dt:    dto4,
 		},
 		{
@@ -440,7 +440,7 @@ func TestUpdateItem(t *testing.T) {
 				suite.mockCache.EXPECT().Get(dto3.ID).Return(trade, nil)
 			},
 			trade: nil,
-			err:   errors.New("rooster not found"),
+			err:   errors.New("item not found"),
 			dt:    dto3,
 		},
 		{
