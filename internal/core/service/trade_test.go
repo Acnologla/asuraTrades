@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/acnologla/asuraTrades/internal/core/domain"
-	tradeDomain "github.com/acnologla/asuraTrades/internal/core/domain/trade"
+	tradedomain "github.com/acnologla/asuraTrades/internal/core/domain/trade"
 	"github.com/acnologla/asuraTrades/internal/core/dto"
 	"github.com/acnologla/asuraTrades/internal/core/port"
 	"github.com/acnologla/asuraTrades/internal/core/port/mock"
@@ -78,7 +78,7 @@ func TestUpdateUserStatus(t *testing.T) {
 		User:      generateSnowflakeLikeID(),
 	}
 
-	trade := tradeDomain.NewTrade(dto1.ID, dto1.User, dto2.User)
+	trade := tradedomain.NewTrade(dto1.ID, dto1.User, dto2.User)
 	testCases := []struct {
 		name     string
 		mockFunc func()
@@ -148,7 +148,7 @@ func TestConfirmTrade(t *testing.T) {
 	defer suite.Teardown()
 
 	tradeID, authorID, otherID := uuid.New(), generateSnowflakeLikeID(), generateSnowflakeLikeID()
-	trade := tradeDomain.NewTrade(tradeID, authorID, otherID)
+	trade := tradedomain.NewTrade(tradeID, authorID, otherID)
 	seconds := service.COUNTDOWN_SECONDS
 
 	testCases := []struct {
@@ -270,7 +270,7 @@ func TestConfirmTrade(t *testing.T) {
 				UserID: authorID,
 				Type:   i,
 			}
-			_ = trade.AddItem(authorID, tradeDomain.NewTradeItemRooster(rooster))
+			_ = trade.AddItem(authorID, tradedomain.NewTradeItemRooster(rooster))
 			suite.mockRoosterRepo.EXPECT().Get(gomock.Any(), rooster.ID).Return(rooster, nil)
 			suite.mockRoosterRepo.EXPECT().Delete(gomock.Any(), rooster.ID).Return(nil)
 			origin := fmt.Sprintf("Trade with %s", authorID)
@@ -337,12 +337,12 @@ func TestUpdateItem(t *testing.T) {
 		UserID: authorID,
 		Type:   1,
 	}
-	trade := tradeDomain.NewTrade(tradeID, authorID, otherID)
+	trade := tradedomain.NewTrade(tradeID, authorID, otherID)
 	testCases := []struct {
 		name     string
 		mockFunc func()
 		err      error
-		trade    *tradeDomain.Trade
+		trade    *tradedomain.Trade
 		dt       *dto.TradeItemDTO
 	}{
 		{
@@ -486,12 +486,12 @@ func TestCreateTrade(t *testing.T) {
 		name     string
 		mockFunc func()
 		err      error
-		trade    *tradeDomain.Trade
+		trade    *tradedomain.Trade
 	}{
 		{
 			name: "Trade arleady exists",
 			mockFunc: func() {
-				suite.mockCache.EXPECT().Get(tradeID).Return(&tradeDomain.Trade{}, nil)
+				suite.mockCache.EXPECT().Get(tradeID).Return(&tradedomain.Trade{}, nil)
 			},
 			trade: nil,
 			err:   errors.New("trade already exists"),
@@ -511,7 +511,7 @@ func TestCreateTrade(t *testing.T) {
 				suite.mockCache.EXPECT().Get(tradeID).Return(nil, nil)
 				suite.mockCache.EXPECT().Update(tradeID, gomock.Any()).Return(nil)
 			},
-			trade: tradeDomain.NewTrade(tradeID, authorID, otherID),
+			trade: tradedomain.NewTrade(tradeID, authorID, otherID),
 			err:   nil,
 		},
 	}
