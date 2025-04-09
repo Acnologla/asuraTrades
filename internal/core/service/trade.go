@@ -227,20 +227,29 @@ func (s *TradeService) UpdateUserStatus(ctx context.Context, dto *dto.UpdateUser
 }
 
 func (s *TradeService) getUserItem(ctx context.Context, id uuid.UUID, t tradedomain.TradeItemType) (*tradedomain.TradeItem, error) {
-
-	if t == tradedomain.ItemTradeType {
-		i, err := s.userService.GetItem(ctx, id)
+	switch t {
+	case tradedomain.ItemTradeType:
+		item, err := s.userService.GetItem(ctx, id)
 		if err != nil {
 			return nil, err
 		}
-		return tradedomain.NewTradeItemItem(i), nil
+		return tradedomain.NewTradeItemItem(item), nil
+	case tradedomain.PetTradeType:
+		pet, err := s.userService.GetPet(ctx, id)
+		if err != nil {
+			return nil, err
+		}
+		return tradedomain.NewTradeItemPet(pet), nil
+	case tradedomain.RoosterTradeType:
+
+		rooster, err := s.userService.GetRooster(ctx, id)
+		if err != nil {
+			return nil, err
+		}
+		return tradedomain.NewTradeItemRooster(rooster), nil
 	}
 
-	r, err := s.userService.GetRooster(ctx, id)
-	if err != nil {
-		return nil, err
-	}
-	return tradedomain.NewTradeItemRooster(r), nil
+	return nil, errors.New("invalid trade item type")
 }
 
 func (s *TradeService) saveAndReturn(tradeID uuid.UUID, trade *tradedomain.Trade) (*tradedomain.Trade, error) {

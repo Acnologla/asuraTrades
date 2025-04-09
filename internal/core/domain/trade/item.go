@@ -65,6 +65,13 @@ func (t *TradeItem) Item() *domain.Item {
 	return t.TradeObject.(*domain.Item)
 }
 
+func NewTradeItemPet(pet *domain.Pet) *TradeItem {
+	return &TradeItem{
+		Type:        PetTradeType,
+		TradeObject: pet,
+	}
+}
+
 func NewTradeItemRooster(rooster *domain.Rooster) *TradeItem {
 	return &TradeItem{
 		Type:        RoosterTradeType,

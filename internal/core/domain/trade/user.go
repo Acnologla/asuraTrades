@@ -41,29 +41,3 @@ func (user *TradeUser) removeItem(item *TradeItem) {
 	}
 	user.Items = slices.Delete(user.Items, i, i+1)
 }
-
-func (user *TradeUser) addGeneric(item *TradeItem) error {
-	for _, it := range user.getItemsByType(item.Type) {
-		if item.TradeObject.GetID() == it.TradeObject.GetID() {
-			return errors.New("item already added")
-		}
-	}
-	return user.appendItem(item)
-}
-func (user *TradeUser) addItem(item *TradeItem) error {
-	itemEntity := item.Item()
-
-	for _, it := range user.getItemsByType(ItemTradeType) {
-		if itemEntity.ID == it.Item().ID {
-			if it.Item().Quantity+1 > itemEntity.Quantity {
-				return errors.New("item quantity exceeded")
-			}
-			it.Item().Quantity++
-			return nil
-		}
-	}
-
-	itemEntity.Quantity = 1 // We set this quantity to 1 because the user can only add one item at a time
-
-	return user.appendItem(item)
-}

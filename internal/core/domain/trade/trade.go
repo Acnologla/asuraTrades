@@ -22,21 +22,41 @@ func (t *Trade) FindUser(userID domain.ID) (*TradeUser, error) {
 	return user, nil
 }
 
+func (t *Trade) getUserAndHandler(userID domain.ID, itemType TradeItemType) (*TradeUser, ItemTypeHandler, error) {
+	user, err := t.FindUser(userID)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	handler, ok := itemHandlers[itemType]
+	if !ok {
+		return nil, nil, errors.New("item type not supported")
+	}
+
+	return user, handler, nil
+}
+
 func (t *Trade) AddItem(userID domain.ID, item *TradeItem) error {
 	if !item.TradeObject.IsTradeable() {
 		return errors.New("item is not tradeable")
 	}
 
-	user, err := t.FindUser(userID)
+	user, handler, err := t.getUserAndHandler(userID, item.Type)
 	if err != nil {
 		return err
 	}
 
-	if item.Type == ItemTradeType {
-		return user.addItem(item)
+	return handler.Add(user, item)
+}
+
+func (t *Trade) RemoveItem(userID domain.ID, itemID uuid.UUID, itemType TradeItemType) error {
+
+	user, handler, err := t.getUserAndHandler(userID, itemType)
+	if err != nil {
+		return err
 	}
 
-	return user.addGeneric(item)
+	return handler.Remove(user, itemID, itemType)
 }
 
 func (t *Trade) UpdateUserStatus(userID domain.ID, confirmed bool) error {
@@ -55,45 +75,6 @@ func (t *Trade) Done() bool {
 		}
 	}
 	return true
-}
-
-func (t *Trade) removeItem(user *TradeUser, itemID uuid.UUID) error {
-	for _, item := range user.getItemsByType(ItemTradeType) {
-		itemEntity := item.Item()
-		if itemEntity.ID == itemID {
-			if itemEntity.Quantity > 1 {
-				itemEntity.Quantity--
-				return nil
-			}
-			user.removeItem(item)
-			return nil
-		}
-	}
-
-	return errors.New("item not found")
-}
-
-func (t *Trade) removeGeneric(user *TradeUser, itemID uuid.UUID, itemType TradeItemType) error {
-	for _, item := range user.getItemsByType(itemType) {
-		if item.TradeObject.GetID() == itemID {
-			user.removeItem(item)
-			return nil
-		}
-	}
-	return errors.New("item not found")
-}
-
-func (t *Trade) RemoveItem(userID domain.ID, itemID uuid.UUID, itemType TradeItemType) error {
-	user, err := t.FindUser(userID)
-	if err != nil {
-		return err
-	}
-
-	if itemType == ItemTradeType {
-		return t.removeItem(user, itemID)
-	}
-
-	return t.removeGeneric(user, itemID, itemType)
 }
 
 func NewTrade(id uuid.UUID, author, other domain.ID) *Trade {
