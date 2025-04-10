@@ -14,14 +14,11 @@ const (
 )
 
 func (t TradeItemType) String() string {
-	switch t {
-	case ItemTradeType:
-		return "item"
-	case RoosterTradeType:
-		return "rooster"
-	}
-
-	return ""
+	return map[TradeItemType]string{
+		ItemTradeType:    "item",
+		RoosterTradeType: "rooster",
+		PetTradeType:     "pet",
+	}[t]
 }
 
 type Tradeable interface {

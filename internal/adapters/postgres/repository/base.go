@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/acnologla/asuraTrades/internal/adapters/postgres"
 	"github.com/acnologla/asuraTrades/internal/core/domain"
@@ -19,9 +20,10 @@ type BaseRepository[T Entity] struct {
 }
 
 func (r *BaseRepository[T]) Delete(ctx context.Context, id uuid.UUID) error {
+	query := fmt.Sprintf("DELETE FROM %s WHERE id = $1", r.tableName)
+
 	_, err := r.db.Exec(ctx,
-		"DELETE FROM $1 WHERE id = $2",
-		r.tableName,
+		query,
 		id)
 
 	return err

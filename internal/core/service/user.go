@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/acnologla/asuraTrades/internal/core/domain"
+	"github.com/acnologla/asuraTrades/internal/core/domain/trade"
 	"github.com/acnologla/asuraTrades/internal/core/port"
 	"github.com/google/uuid"
 )
@@ -52,7 +53,7 @@ func (s *UserService) GetUserProfile(ctx context.Context, id domain.ID) (*domain
 		return nil, err
 	}
 
-	return domain.NewUserProfile(user, roosters, items, pets), nil
+	return domain.NewUserProfile(user, trade.GetTradableEntities(roosters), trade.GetTradableEntities(items), trade.GetTradableEntities(pets)), nil
 }
 
 func NewUserService(userRepository port.UserRepository, roosterRepository port.RoosterRepository, itemRepository port.ItemRepository, petRepository port.PetRepository) *UserService {

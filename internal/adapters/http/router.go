@@ -22,7 +22,10 @@ func generateCorsConfig(domain string) cors.Config {
 func CreateAndServe(c config.HTTPConfig, userToken *controllers.UserTokenController, wsController *websocket.TradeWebsocket) error {
 	r := gin.New()
 
-	r.Use(cors.New(generateCorsConfig(c.ProductionURL)))
+	if c.Production {
+		r.Use(cors.New(generateCorsConfig(c.ProductionURL)))
+	}
+
 	r.GET("/user/:token", userToken.GetUserProfile)
 	r.POST("/token", userToken.GenerateToken)
 	r.GET("/ws", wsController.UpgradeConnection)

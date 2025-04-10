@@ -38,6 +38,13 @@ func NewTradeResponse(trade *tradedomain.Trade) *TradeResponse {
 					Origin: rooster.Origin,
 					Type:   rooster.Type,
 				}
+			} else if item.Type == tradedomain.PetTradeType {
+				petEntity := item.Pet()
+				items[i].Data = &UserPetResponse{
+					ID:     petEntity.ID.String(),
+					UserID: user.ID.String(),
+					Type:   int(petEntity.Type),
+				}
 			} else {
 				itemEntity := item.Item()
 				items[i].Data = &UserItemResponse{

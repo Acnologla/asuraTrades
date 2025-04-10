@@ -24,6 +24,7 @@ type (
 		Port                  string
 		GenerateTokenPassword string
 		ProductionURL         string
+		Production            bool
 	}
 
 	Config struct {
@@ -58,6 +59,7 @@ func LoadConfig() (*Config, error) {
 		GenerateTokenPassword: os.Getenv("GENERATE_TOKEN_PASSWORD"),
 		Port:                  os.Getenv("PORT"),
 		ProductionURL:         os.Getenv("PRODUCTION_DOMAIN"),
+		Production:            isProduction,
 	}
 
 	return &Config{

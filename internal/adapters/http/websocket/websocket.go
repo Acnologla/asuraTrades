@@ -29,9 +29,11 @@ func (t *TradeWebsocket) getUpgrader() *websocket.Upgrader {
 		ReadBufferSize:  1024,
 		WriteBufferSize: 1024,
 		CheckOrigin: func(r *http.Request) bool {
+
 			if !t.production {
 				return true
 			}
+
 			origin := r.Header.Get("Origin")
 			originURL, err := url.Parse(origin)
 			if err != nil {
@@ -185,7 +187,9 @@ func (t *TradeWebsocket) UpgradeConnection(c *gin.Context) {
 
 func NewTradeWebsocket(tokenService *service.UserTokenService, tradeService *service.TradeService, prooduction bool, productionURl string) *TradeWebsocket {
 	return &TradeWebsocket{
-		tokenService: tokenService,
-		tradeService: tradeService,
+		tokenService:     tokenService,
+		tradeService:     tradeService,
+		production:       prooduction,
+		productionDomain: productionURl,
 	}
 }
