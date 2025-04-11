@@ -72,19 +72,41 @@ func newTradeRoom(connection *websocket.Conn, tradeUser *domain.UserTrade) *trad
 	}
 }
 
-var rooms = make(map[uuid.UUID]*tradeRoom)
+type RoomManager struct {
+	sync.Mutex
+	rooms map[uuid.UUID]*tradeRoom
+}
 
-func getOrCreateRoom(connection *websocket.Conn, tradeUser *domain.UserTrade) *tradeRoom {
-	if room, ok := rooms[tradeUser.TradeID]; ok {
-		room.Lock()
-		defer room.Unlock()
+func (rm *RoomManager) getOrCreateRoom(connection *websocket.Conn, tradeUser *domain.UserTrade) *tradeRoom {
+	rm.Lock()
+	defer rm.Unlock()
+
+	if room, ok := rm.rooms[tradeUser.TradeID]; ok {
 		room.addUser(tradeUser, connection)
 		return room
 	}
 
 	room := newTradeRoom(connection, tradeUser)
-	rooms[tradeUser.TradeID] = room
+	rm.rooms[tradeUser.TradeID] = room
 	return room
+}
+
+func (rm *RoomManager) removeUser(tradeID uuid.UUID, userID domain.ID) {
+	rm.Lock()
+	defer rm.Unlock()
+
+	if room, ok := rm.rooms[tradeID]; ok {
+		room.removeUser(userID)
+		if len(room.users) == 0 {
+			delete(rm.rooms, tradeID)
+		}
+	}
+}
+
+func NewRoomManager() *RoomManager {
+	return &RoomManager{
+		rooms: make(map[uuid.UUID]*tradeRoom),
+	}
 }
 
 func roomMessageToTradeItemDTO(message *roomMessage) *dto.TradeItemDTO {
@@ -93,17 +115,6 @@ func roomMessageToTradeItemDTO(message *roomMessage) *dto.TradeItemDTO {
 
 func roomMessageToUpdateUserStatusDTO(message *roomMessage) *dto.UpdateUserStatusDTO {
 	return dto.NewUpdateUserStatusDTO(message.TradeID, message.Data.Confirmed, message.User)
-}
-
-func removeUserFromRoom(tradeID uuid.UUID, user domain.ID) {
-	if room, ok := rooms[tradeID]; ok {
-		room.Lock()
-		room.removeUser(user)
-		room.Unlock()
-		if len(room.users) == 0 {
-			delete(rooms, tradeID)
-		}
-	}
 }
 
 func validateRoomMessage(message *roomMessage) error {

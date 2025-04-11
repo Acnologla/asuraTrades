@@ -22,6 +22,7 @@ type TradeWebsocket struct {
 	tradeService     *service.TradeService
 	productionDomain string
 	production       bool
+	roomManager      *RoomManager
 }
 
 func (t *TradeWebsocket) getUpgrader() *websocket.Upgrader {
@@ -139,7 +140,7 @@ func (t *TradeWebsocket) sendPongs(conn *websocket.Conn) {
 }
 
 func (t *TradeWebsocket) initializeUser(ctx context.Context, conn *websocket.Conn, room *tradeRoom, user *domain.UserTrade) {
-	defer removeUserFromRoom(user.TradeID, user.AuthorID)
+	defer t.roomManager.removeUser(user.TradeID, user.AuthorID)
 	t.sendPongs(conn)
 	limiter := rate.NewLimiter(1, 3)
 	for {
@@ -172,7 +173,7 @@ func (t *TradeWebsocket) UpgradeConnection(c *gin.Context) {
 		return
 	}
 	defer conn.Close()
-	room := getOrCreateRoom(conn, tokenInfo)
+	room := t.roomManager.getOrCreateRoom(conn, tokenInfo)
 	trade, err := t.tradeService.GetTrade(c.Request.Context(), room.id)
 	if err != nil {
 		trade, err = t.tradeService.CreateTrade(c.Request.Context(), tokenInfo.TradeID, tokenInfo.AuthorID, tokenInfo.OtherID)
@@ -191,5 +192,6 @@ func NewTradeWebsocket(tokenService *service.UserTokenService, tradeService *ser
 		tradeService:     tradeService,
 		production:       prooduction,
 		productionDomain: productionURl,
+		roomManager:      NewRoomManager(),
 	}
 }
