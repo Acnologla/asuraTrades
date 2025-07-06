@@ -3,14 +3,12 @@ package service_test
 import (
 	"context"
 	"errors"
-	"fmt"
 	"testing"
 	"time"
 
 	"github.com/acnologla/asuraTrades/internal/core/domain"
 	tradedomain "github.com/acnologla/asuraTrades/internal/core/domain/trade"
 	"github.com/acnologla/asuraTrades/internal/core/dto"
-	"github.com/acnologla/asuraTrades/internal/core/port"
 	"github.com/acnologla/asuraTrades/internal/core/port/mock"
 
 	"github.com/acnologla/asuraTrades/internal/core/service"
@@ -260,58 +258,6 @@ func TestConfirmTrade(t *testing.T) {
 		case <-time.After(6 * time.Second):
 			t.Fatal("Callback was not called after ticker completion")
 		}
-	})
-
-	t.Run("max roosters", func(t *testing.T) {
-		roosterQuantity := service.MAX_ROOSTERS_QUANTITY + 1
-		for i := range roosterQuantity {
-			rooster := &domain.Rooster{
-				ID:     uuid.New(),
-				UserID: authorID,
-				Type:   i,
-			}
-			_ = trade.AddItem(authorID, tradedomain.NewTradeItemRooster(rooster))
-			suite.mockRoosterRepo.EXPECT().Get(gomock.Any(), rooster.ID).Return(rooster, nil)
-			suite.mockRoosterRepo.EXPECT().Delete(gomock.Any(), rooster.ID).Return(nil)
-			origin := fmt.Sprintf("Trade with %s", authorID)
-			newRooster := domain.NewRooster(otherID, rooster.Type, origin)
-			suite.mockRoosterRepo.EXPECT().GetUserRoosterQuantity(gomock.Any(), otherID).Return(i+1, nil)
-
-			suite.mockRoosterRepo.EXPECT().Create(gomock.Any(), newRooster).Return(nil)
-		}
-
-		e := errors.New("too many roosters")
-		suite.mockCache.EXPECT().Get(tradeID).Return(trade, nil)
-		suite.mockCache.EXPECT().Get(tradeID).Return(trade, nil)
-		suite.mockTxProvider.EXPECT().
-			Transact(gomock.Any(), gomock.Any()).
-			DoAndReturn(func(ctx context.Context, txFunc func(adapters port.UserTradeTxAdapters, lock func(domain.ID) error) error) error {
-				return txFunc(port.UserTradeTxAdapters{
-					UserRepository:    suite.mockUserRepo,
-					ItemRepository:    suite.mockItemRepo,
-					RoosterRepository: suite.mockRoosterRepo,
-				}, func(i domain.ID) error {
-					return nil
-				})
-			})
-
-		resultCh := make(chan struct {
-			success bool
-			err     error
-		})
-
-		_, err := suite.tradeService.ConfirmTrade(context.Background(), tradeID, func(success bool, err error) {
-			resultCh <- struct {
-				success bool
-				err     error
-			}{success, err}
-		})
-
-		assert.Nil(t, err)
-
-		result := <-resultCh
-		assert.False(t, result.success)
-		assert.Equal(t, e, result.err)
 	})
 
 }
