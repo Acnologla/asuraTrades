@@ -262,8 +262,8 @@ func TestConfirmTrade(t *testing.T) {
 		}
 	})
 
-	t.Run("max of ten roosters", func(t *testing.T) {
-		roosterQuantity := 11
+	t.Run("max roosters", func(t *testing.T) {
+		roosterQuantity := service.MAX_ROOSTERS_QUANTITY + 1
 		for i := range roosterQuantity {
 			rooster := &domain.Rooster{
 				ID:     uuid.New(),
