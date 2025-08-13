@@ -26,7 +26,7 @@ func (r *RoosterRepository) Get(ctx context.Context, id uuid.UUID) (*domain.Roos
 
 func (r *RoosterRepository) GetUserRoosters(ctx context.Context, userID domain.ID) ([]*domain.Rooster, error) {
 	return r.GetEntitiesByUserID(ctx, userID,
-		"SELECT id, userid, type, COALESCE(equip,false) FROM rooster WHERE userid = $1",
+		"SELECT id, userid, type, COALESCE(equip,false) FROM rooster WHERE userid = $1 and equip = false",
 		func(rows pgx.Rows) (*domain.Rooster, error) {
 			rooster := &domain.Rooster{}
 			err := rows.Scan(&rooster.ID, &rooster.UserID, &rooster.Type, &rooster.Equip)
