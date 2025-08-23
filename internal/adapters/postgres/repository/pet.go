@@ -26,7 +26,7 @@ func (r *PetRepository) Get(ctx context.Context, id uuid.UUID) (*domain.Pet, err
 
 func (r *PetRepository) GetUserPets(ctx context.Context, userID domain.ID) ([]*domain.Pet, error) {
 	return r.GetEntitiesByUserID(ctx, userID,
-		"SELECT id, userid, type, level FROM pet WHERE userid = $1 and equip != true",
+		"SELECT id, userid, type, level FROM pet WHERE userid = $1 and (equip = false or equip is null)",
 		func(rows pgx.Rows) (*domain.Pet, error) {
 			pet := &domain.Pet{}
 			err := rows.Scan(&pet.ID, &pet.UserID, &pet.Type, &pet.Level)
