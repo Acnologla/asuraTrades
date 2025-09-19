@@ -110,7 +110,7 @@ func (s *TradeService) transferRooster(ctx context.Context, request *TransferReq
 	}
 
 	origin := fmt.Sprintf("Trade with %s", request.CurrentOwnerID)
-	newRooster := domain.NewRooster(request.NewOwnerID, request.Object.Type, origin)
+	newRooster := domain.NewRooster(request.NewOwnerID, request.Object.Type, origin, request.Object.Special)
 	if err := repo.Create(ctx, newRooster); err != nil {
 		return err
 	}

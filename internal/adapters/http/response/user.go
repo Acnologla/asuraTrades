@@ -13,16 +13,18 @@ type UserItemResponse struct {
 }
 
 type UserRoosterResponse struct {
-	ID     string `json:"id"`
-	UserID string `json:"user_id"`
-	Origin string `json:"origin"`
-	Type   int    `json:"type"`
+	ID      string `json:"id"`
+	UserID  string `json:"user_id"`
+	Origin  string `json:"origin"`
+	Type    int    `json:"type"`
+	Special bool   `json:"special"`
 }
 
 type UserPetResponse struct {
 	ID     string `json:"id"`
 	UserID string `json:"user_id"`
 	Type   int    `json:"type"`
+	Level  int    `json:"level"`
 }
 
 type UserTokenResponse struct {
@@ -39,10 +41,11 @@ func NewUserTokenResponse(userTrade *domain.UserTrade, userProfile *domain.UserP
 	uID := userProfile.ID.String()
 	for i, rooster := range userProfile.Roosters {
 		roosters[i] = &UserRoosterResponse{
-			ID:     rooster.ID.String(),
-			UserID: uID,
-			Origin: rooster.Origin,
-			Type:   rooster.Type,
+			ID:      rooster.ID.String(),
+			UserID:  uID,
+			Origin:  rooster.Origin,
+			Type:    rooster.Type,
+			Special: rooster.Special,
 		}
 	}
 	items := make([]*UserItemResponse, len(userProfile.Items))
@@ -61,6 +64,7 @@ func NewUserTokenResponse(userTrade *domain.UserTrade, userProfile *domain.UserP
 			ID:     pet.ID.String(),
 			UserID: uID,
 			Type:   int(pet.Type),
+			Level:  pet.Level,
 		}
 	}
 	return &UserTokenResponse{

@@ -18,18 +18,18 @@ func (r *RoosterRepository) Get(ctx context.Context, id uuid.UUID) (*domain.Roos
 	rooster := &domain.Rooster{}
 
 	err := r.db.QueryRow(ctx,
-		"SELECT id, userid, type, COALESCE(equip, false) FROM rooster WHERE id = $1",
-		id).Scan(&rooster.ID, &rooster.UserID, &rooster.Type, &rooster.Equip)
+		"SELECT id, userid, type, COALESCE(equip, false), special FROM rooster WHERE id = $1",
+		id).Scan(&rooster.ID, &rooster.UserID, &rooster.Type, &rooster.Equip, &rooster.Special)
 
 	return rooster, err
 }
 
 func (r *RoosterRepository) GetUserRoosters(ctx context.Context, userID domain.ID) ([]*domain.Rooster, error) {
 	return r.GetEntitiesByUserID(ctx, userID,
-		"SELECT id, userid, type, COALESCE(equip,false) FROM rooster WHERE userid = $1 and equip = false",
+		"SELECT id, userid, type, COALESCE(equip,false), special FROM rooster WHERE userid = $1 and equip = false",
 		func(rows pgx.Rows) (*domain.Rooster, error) {
 			rooster := &domain.Rooster{}
-			err := rows.Scan(&rooster.ID, &rooster.UserID, &rooster.Type, &rooster.Equip)
+			err := rows.Scan(&rooster.ID, &rooster.UserID, &rooster.Type, &rooster.Equip, &rooster.Special)
 			return rooster, err
 		})
 }
@@ -49,8 +49,8 @@ func (r *RoosterRepository) GetUserRoosterQuantity(ctx context.Context, userID d
 
 func (r *RoosterRepository) Create(ctx context.Context, rooster *domain.Rooster) error {
 	_, err := r.db.Exec(ctx,
-		"INSERT INTO rooster (userid, type, origin, equip) VALUES ($1, $2, $3, false)",
-		rooster.UserID, rooster.Type, rooster.Origin)
+		"INSERT INTO rooster (userid, type, origin, equip, special) VALUES ($1, $2, $3, false, $4)",
+		rooster.UserID, rooster.Type, rooster.Origin, rooster.Special)
 
 	return err
 }
