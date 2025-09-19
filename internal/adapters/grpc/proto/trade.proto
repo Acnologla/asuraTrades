@@ -31,6 +31,7 @@ message Rooster {
   uint64 user_id = 2;
   string origin = 3;
   int32 type = 4;
+  bool special = 5;
 }
 
 message Item {

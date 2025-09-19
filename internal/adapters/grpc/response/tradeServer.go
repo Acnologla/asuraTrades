@@ -25,10 +25,11 @@ func NewUserProfileResponse(profile *domain.UserProfile) *proto.GetUserProfileRe
 
 	for i, rooster := range profile.Roosters {
 		roosters[i] = &proto.Rooster{
-			Id:     rooster.ID.String(),
-			Origin: rooster.Origin,
-			Type:   int32(rooster.Type),
-			UserId: uint64(rooster.UserID),
+			Id:      rooster.ID.String(),
+			Origin:  rooster.Origin,
+			Type:    int32(rooster.Type),
+			UserId:  uint64(rooster.UserID),
+			Special: rooster.Special,
 		}
 	}
 

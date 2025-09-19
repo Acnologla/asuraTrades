@@ -191,6 +191,7 @@ type Rooster struct {
 	UserId        uint64                 `protobuf:"varint,2,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
 	Origin        string                 `protobuf:"bytes,3,opt,name=origin,proto3" json:"origin,omitempty"`
 	Type          int32                  `protobuf:"varint,4,opt,name=type,proto3" json:"type,omitempty"`
+	Special       bool                   `protobuf:"varint,5,opt,name=special,proto3" json:"special,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -251,6 +252,13 @@ func (x *Rooster) GetType() int32 {
 		return x.Type
 	}
 	return 0
+}
+
+func (x *Rooster) GetSpecial() bool {
+	if x != nil {
+		return x.Special
+	}
+	return false
 }
 
 type Item struct {
@@ -455,12 +463,13 @@ const file_proto_trade_proto_rawDesc = "" +
 	"\x12FinishTradeRequest\x12\x1b\n" +
 	"\tauthor_id\x18\x01 \x01(\x04R\bauthorId\x12\x19\n" +
 	"\bother_id\x18\x02 \x01(\x04R\aotherId\x12&\n" +
-	"\x05items\x18\x03 \x03(\v2\x10.trade.TradeItemR\x05items\"^\n" +
+	"\x05items\x18\x03 \x03(\v2\x10.trade.TradeItemR\x05items\"x\n" +
 	"\aRooster\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x17\n" +
 	"\auser_id\x18\x02 \x01(\x04R\x06userId\x12\x16\n" +
 	"\x06origin\x18\x03 \x01(\tR\x06origin\x12\x12\n" +
-	"\x04type\x18\x04 \x01(\x05R\x04type\"x\n" +
+	"\x04type\x18\x04 \x01(\x05R\x04type\x12\x18\n" +
+	"\aspecial\x18\x05 \x01(\bR\aspecial\"x\n" +
 	"\x04Item\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x17\n" +
 	"\auser_id\x18\x02 \x01(\x04R\x06userId\x12\x1a\n" +
