@@ -87,14 +87,18 @@ func (s *TradeService) transferPet(ctx context.Context, request *TransferRequest
 	return repo.Create(ctx, newPet)
 }
 
-const MAX_ROOSTERS_QUANTITY = 24
+const (
+	MAX_ROOSTERS_QUANTITY      = 24
+	BASE_MAX_ROOSTERS_QUANTITY = 12
+)
 
 func (s *TradeService) checkMaxRoosters(ctx context.Context, id domain.ID, repo port.RoosterRepository) error {
-	roosterQuantity, err := repo.GetUserRoosterQuantity(ctx, id)
+	roosterQuantity, limit, err := repo.GetUserRoosterQuantityAndUserLimit(ctx, id)
 	if err != nil {
 		return err
 	}
-	if roosterQuantity > MAX_ROOSTERS_QUANTITY {
+	softLimit := BASE_MAX_ROOSTERS_QUANTITY + limit
+	if roosterQuantity > MAX_ROOSTERS_QUANTITY || roosterQuantity > softLimit {
 		return errors.New("too many roosters")
 	}
 	return nil

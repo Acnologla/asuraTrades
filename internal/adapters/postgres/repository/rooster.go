@@ -34,17 +34,25 @@ func (r *RoosterRepository) GetUserRoosters(ctx context.Context, userID domain.I
 		})
 }
 
-func (r *RoosterRepository) GetUserRoosterQuantity(ctx context.Context, userID domain.ID) (int, error) {
+func (r *RoosterRepository) GetUserRoosterQuantityAndUserLimit(ctx context.Context, userID domain.ID) (int, int, error) {
 	quantity := 1
+	limit := 0
 	err := r.db.QueryRow(ctx,
 		"SELECT COUNT(*) FROM rooster WHERE userid = $1",
 		userID).Scan(&quantity)
 
 	if err != nil {
-		return 0, err
+		return 0, 0, err
 	}
 
-	return quantity, err
+	err = r.db.QueryRow(ctx,
+		"SELECT extra_roosters_slot FROM users WHERE id = $1",
+		userID).Scan(&limit)
+	if err != nil {
+		return 0, 0, err
+	}
+
+	return quantity, limit, err
 }
 
 func (r *RoosterRepository) Create(ctx context.Context, rooster *domain.Rooster) error {

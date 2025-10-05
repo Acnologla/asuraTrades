@@ -85,19 +85,20 @@ func (mr *MockRoosterRepositoryMockRecorder) Get(ctx, id any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockRoosterRepository)(nil).Get), ctx, id)
 }
 
-// GetUserRoosterQuantity mocks base method.
-func (m *MockRoosterRepository) GetUserRoosterQuantity(ctx context.Context, id domain.ID) (int, error) {
+// GetUserRoosterQuantityAndUserLimit mocks base method.
+func (m *MockRoosterRepository) GetUserRoosterQuantityAndUserLimit(ctx context.Context, id domain.ID) (int, int, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetUserRoosterQuantity", ctx, id)
+	ret := m.ctrl.Call(m, "GetUserRoosterQuantityAndUserLimit", ctx, id)
 	ret0, _ := ret[0].(int)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret1, _ := ret[1].(int)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
 }
 
-// GetUserRoosterQuantity indicates an expected call of GetUserRoosterQuantity.
-func (mr *MockRoosterRepositoryMockRecorder) GetUserRoosterQuantity(ctx, id any) *gomock.Call {
+// GetUserRoosterQuantityAndUserLimit indicates an expected call of GetUserRoosterQuantityAndUserLimit.
+func (mr *MockRoosterRepositoryMockRecorder) GetUserRoosterQuantityAndUserLimit(ctx, id any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserRoosterQuantity", reflect.TypeOf((*MockRoosterRepository)(nil).GetUserRoosterQuantity), ctx, id)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserRoosterQuantityAndUserLimit", reflect.TypeOf((*MockRoosterRepository)(nil).GetUserRoosterQuantityAndUserLimit), ctx, id)
 }
 
 // GetUserRoosters mocks base method.

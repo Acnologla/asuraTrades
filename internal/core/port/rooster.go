@@ -12,7 +12,7 @@ import (
 type RoosterRepository interface {
 	Get(ctx context.Context, id uuid.UUID) (*domain.Rooster, error)
 	GetUserRoosters(ctx context.Context, id domain.ID) ([]*domain.Rooster, error)
-	GetUserRoosterQuantity(ctx context.Context, id domain.ID) (int, error)
+	GetUserRoosterQuantityAndUserLimit(ctx context.Context, id domain.ID) (int, int, error)
 	Delete(ctx context.Context, id uuid.UUID) error
 	Create(ctx context.Context, rooster *domain.Rooster) error
 }
