@@ -38,25 +38,25 @@ func (r *ItemRepository) Add(ctx context.Context, item *domain.Item, quantity in
 	cmdTag, err := r.db.Exec(ctx,
 		`UPDATE item
 		SET quantity = quantity + $4 
-		WHERE userid = $1 AND itemid = $2 AND type = $3`,
+		WHERE id = (
+			SELECT id 
+			FROM item 
+			WHERE userid = $1 AND itemid = $2 AND type = $3
+			LIMIT 1
+		)`,
 		item.UserID, item.ItemID, item.Type, quantity)
-
 	if err != nil {
 		return err
 	}
-
 	if cmdTag.RowsAffected() == 0 {
-
 		_, err = r.db.Exec(ctx,
 			`INSERT INTO item (userid, quantity, itemid, type)
 			VALUES ($1, $2, $3, $4)`,
 			item.UserID, quantity, item.ItemID, item.Type)
-
 		if err != nil {
 			return err
 		}
 	}
-
 	return nil
 }
 
